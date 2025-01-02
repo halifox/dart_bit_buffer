@@ -19,7 +19,7 @@
 
 ```yaml
 dependencies:
-  dart_bit_buffer:
+  bit_buffer:
     git:
       url: https://github.com/halifox/dart_bit_buffer
       ref: 1.0.0
