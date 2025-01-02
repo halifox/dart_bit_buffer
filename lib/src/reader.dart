@@ -113,19 +113,9 @@ class BitBufferReader {
     int binaryDigits = 64,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    // 先读取无符号整数值。
-    int number = getUnsignedInt(binaryDigits: binaryDigits, order: order);
-
-    // 检查符号位，判断是否为负数。
-    int isNegative = (number >> (binaryDigits - 1)) & 1;
-
-    if (isNegative != 0) {
-      // 如果是负数，转换为补码表示的有符号整数。
-      int mask = (1 << (binaryDigits - 1)) - 1; // 获取有效位的掩码。
-      number = -1 * (~(number - 1) & mask); // 还原负数值。
-    }
-
-    return number;
+    int value = _buffer.getInt(_position, binaryDigits: binaryDigits, order: order);
+    _position += binaryDigits; // 更新读取位置。
+    return value;
   }
 
   /// 从缓冲区读取指定数量的无符号整数，按给定的顺序解析每个位。
@@ -153,20 +143,7 @@ class BitBufferReader {
     int binaryDigits = 64,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    int value = 0;
-
-    // 根据指定的顺序依次读取每个位。
-    for (int i = 0; i < binaryDigits; i++) {
-      // 计算当前比特位置。
-      int position = _position + binaryDigits - 1 - i;
-      if (order == BitOrder.MSBFirst) {
-        position = _position + i;
-      }
-
-      // 将读取的比特值按权重累加到结果值中。
-      value |= (_buffer.getBit(position) << (binaryDigits - 1 - i));
-    }
-
+    int value = _buffer.getUnsignedInt(_position, binaryDigits: binaryDigits, order: order);
     _position += binaryDigits; // 更新读取位置。
     return value;
   }

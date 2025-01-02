@@ -309,4 +309,82 @@ class BitBuffer {
       _words[wordIndex] |= (1 << bitIndex); // 设置目标比特。
     }
   }
+
+  int getInt(
+    int offset, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    // 先读取无符号整数值。
+    int number = getUnsignedInt(offset, binaryDigits: binaryDigits, order: order);
+
+    // 检查符号位，判断是否为负数。
+    int isNegative = (number >> (binaryDigits - 1)) & 1;
+
+    if (isNegative != 0) {
+      // 如果是负数，转换为补码表示的有符号整数。
+      int mask = (1 << (binaryDigits - 1)) - 1; // 获取有效位的掩码。
+      number = -1 * (~(number - 1) & mask); // 还原负数值。
+    }
+
+    return number;
+  }
+
+  void putInt(
+    int offset,
+    int value, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    if (value.isNegative) {
+      // 处理负数值，转换为补码形式。
+      int mask = (1 << binaryDigits) - 1;
+      value = ~(-value); // 取反。
+      value += 1; // 加 1 形成补码。
+      value &= mask; // 保留指定位数。
+    }
+    putUnsignedInt(offset, value, binaryDigits: binaryDigits, order: order);
+  }
+
+  int getUnsignedInt(
+    int offset, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    int value = 0;
+
+    // 根据指定的顺序依次读取每个位。
+    for (int i = 0; i < binaryDigits; i++) {
+      // 计算当前比特位置。
+      int position = offset + binaryDigits - 1 - i;
+      if (order == BitOrder.MSBFirst) {
+        position = offset + i;
+      }
+
+      // 将读取的比特值按权重累加到结果值中。
+      value |= (getBit(position) << (binaryDigits - 1 - i));
+    }
+    return value;
+  }
+
+  void putUnsignedInt(
+    int offset,
+    int value, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    for (int i = 0; i < binaryDigits; i++) {
+      // 提取当前位的值。
+      int bit = (value >> i) & 1;
+
+      // 根据顺序确定实际写入位置。
+      int position = offset + i;
+      if (order == BitOrder.MSBFirst) {
+        position = offset + binaryDigits - 1 - i;
+      }
+
+      // 写入比特值到指定位置。
+      setBit(position, bit);
+    }
+  }
 }

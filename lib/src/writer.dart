@@ -166,14 +166,9 @@ class BitBufferWriter {
     int binaryDigits = 64,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    if (value.isNegative) {
-      // 处理负数值，转换为补码形式。
-      int mask = (1 << binaryDigits) - 1;
-      value = ~(-value); // 取反。
-      value += 1; // 加 1 形成补码。
-      value &= mask; // 保留指定位数。
-    }
-    putUnsignedInt(value, binaryDigits: binaryDigits, order: order);
+    allocateIfNeeded(binaryDigits); // 确保有足够空间写入指定位数的整数。
+    _buffer.putInt(_position, value, binaryDigits: binaryDigits, order: order);
+    _position += binaryDigits; // 更新写入位置。
   }
 
   /// 写入一个无符号整数到 `BitBuffer` 中，按照指定的位数和位序进行编码。
@@ -207,19 +202,7 @@ class BitBufferWriter {
     BitOrder order = BitOrder.MSBFirst,
   }) {
     allocateIfNeeded(binaryDigits); // 确保有足够空间写入指定位数的整数。
-    for (int i = 0; i < binaryDigits; i++) {
-      // 提取当前位的值。
-      int bit = (value >> i) & 1;
-
-      // 根据顺序确定实际写入位置。
-      int index = _position + i;
-      if (order == BitOrder.MSBFirst) {
-        index = _position + binaryDigits - 1 - i;
-      }
-
-      // 写入比特值到指定位置。
-      _buffer.setBit(index, bit);
-    }
+    _buffer.putUnsignedInt(_position, value, binaryDigits: binaryDigits, order: order);
     _position += binaryDigits; // 更新写入位置。
   }
 }
