@@ -43,6 +43,14 @@ bool value = reader.getBool();  // 读取布尔值
 int number = reader.getInt(binaryDigits: 32);  // 读取有符号整数
 ```
 
+**从 UDP 接收数据并转换为 BitBuffer**
+
+```dart
+Datagram? datagram = socket.receive();
+Uint8List data = datagram.data;
+BitBuffer bitBuffer = BitBuffer.formUInt8List(data);
+```
+
 **写入单个比特**
 
 ```dart
@@ -93,6 +101,9 @@ int value = reader.getInt(binaryDigits: 32);  // 读取一个有符号整数
 - **getBit**: 获取指定位置的比特值。
 - **setBit**: 设置指定位置的比特值。
 - **toSectionString**: 获取指定范围内的比特序列字符串。
+- **formIntList**: 从 `List<int>` 创建一个 `BitBuffer` 实例，每个整数按照指定的比特数进行编码。
+- **formUIntList**: 从 `List<int>` 创建一个 `BitBuffer` 实例，按照指定的比特数将无符号整数编码到比特缓冲区。
+- **formUInt8List**: 从 `Uint8List` 创建一个 `BitBuffer` 实例，每个字节（8位）被转换为比特流。
 
 ---
 
