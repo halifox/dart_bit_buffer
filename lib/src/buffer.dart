@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:bit_buffer/bit_buffer.dart';
 
@@ -23,6 +24,75 @@ class BitBuffer {
 
   /// 默认构造函数，初始化 BitBuffer。
   BitBuffer();
+
+  /// 从 `Uint8List` 创建一个 `BitBuffer` 实例。
+  ///
+  /// 每个字节按照 8 个比特写入缓冲区。
+  ///
+  /// 参数:
+  /// - `data`: 包含无符号 8 位整数的列表。
+  ///
+  /// 返回:
+  /// - 一个新的 `BitBuffer` 实例，包含写入的无符号 8 位整数数据。
+  ///
+  /// 示例:
+  /// ```dart
+  /// Uint8List values = Uint8List.fromList([1, 2, 3]);
+  /// BitBuffer buffer = BitBuffer.formUInt8List(values);
+  /// ```
+  factory BitBuffer.formUInt8List(Uint8List data) {
+    return BitBuffer.formUIntList(data, binaryDigits: 8);
+  }
+
+  /// 从无符号整型列表创建一个 `BitBuffer` 实例。
+  ///
+  /// 每个整型值将按照指定的二进制位数写入缓冲区。
+  ///
+  /// 参数:
+  /// - `data`: 包含无符号整数值的列表。
+  /// - `binaryDigits`: 每个整数占用的比特数，默认为 64。
+  ///
+  /// 返回:
+  /// - 一个新的 `BitBuffer` 实例，包含写入的无符号整数数据。
+  ///
+  /// 示例:
+  /// ```dart
+  /// List<int> values = [1, 2, 3];
+  /// BitBuffer buffer = BitBuffer.formUIntList(values, binaryDigits: 32);
+  /// ```
+  factory BitBuffer.formUIntList(List<int> data, {int binaryDigits = 64}) {
+    BitBuffer bitBuffer = BitBuffer();
+    BitBufferWriter writer = bitBuffer.writer();
+    for (int value in data) {
+      writer.putUnsignedInt(value, binaryDigits: binaryDigits);
+    }
+    return bitBuffer;
+  }
+
+  /// 从整型列表创建一个 `BitBuffer` 实例。
+  ///
+  /// 每个整型值将按照指定的二进制位数写入缓冲区。
+  ///
+  /// 参数:
+  /// - `data`: 包含整数值的列表。
+  /// - `binaryDigits`: 每个整数占用的比特数，默认为 64。
+  ///
+  /// 返回:
+  /// - 一个新的 `BitBuffer` 实例，包含写入的整数数据。
+  ///
+  /// 示例:
+  /// ```dart
+  /// List<int> values = [1, -2, 3];
+  /// BitBuffer buffer = BitBuffer.formIntList(values, binaryDigits: 32);
+  /// ```
+  factory BitBuffer.formIntList(List<int> data, {int binaryDigits = 64}) {
+    BitBuffer bitBuffer = BitBuffer();
+    BitBufferWriter writer = bitBuffer.writer();
+    for (int value in data) {
+      writer.putInt(value, binaryDigits: binaryDigits);
+    }
+    return bitBuffer;
+  }
 
   /// 返回一个用于读取的 `BitBufferReader` 实例。
   BitBufferReader reader() => BitBufferReader(this);
