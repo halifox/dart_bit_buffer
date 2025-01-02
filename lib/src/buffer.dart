@@ -33,7 +33,27 @@ class BitBuffer {
   /// 返回一个用于追加比特的 `BitBufferWriter` 实例，并将写入位置设置为当前大小。
   BitBufferWriter append() => writer()..seekTo(_size);
 
-  /// 为缓冲区分配指定数量的比特。
+  /// 为 `BitBuffer` 分配指定容量的比特空间。
+  ///
+  /// ### 参数:
+  /// - `capacity`: 需要分配的比特数量。
+  ///
+  /// ### 功能:
+  /// - 使用当前存储单元中剩余的空闲比特。
+  /// - 根据需要增加新的存储单元以满足分配需求。
+  ///
+  /// ### 注意:
+  /// - 如果当前存储单元中有空闲比特，会优先使用这些空闲比特。
+  /// - 该方法会自动扩展缓冲区的存储单元，不会缩减已有的容量。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(50); // 分配50个位的空间。
+  /// print(buffer.size); // 输出: 50
+  /// buffer.allocate(20); // 再分配20个位的空间。
+  /// print(buffer.size); // 输出: 70
+  /// ```
   void allocate(int capacity) {
     // 计算当前剩余的可用比特数。
     int free = _words.length * BITS_PER_WORD - _size;
@@ -53,7 +73,25 @@ class BitBuffer {
     _size += capacity;
   }
 
-  /// 修剪缓冲区，移除多余的存储单元，减少内存浪费。
+  /// 移除超出当前实际大小的多余存储单元，以优化内存使用。
+  ///
+  /// ### 功能:
+  /// - 根据当前使用的比特大小 `_size`，移除未被使用的存储单元。
+  /// - 如果存储单元包含多余的空间但仍在使用范围内，不会移除。
+  ///
+  /// ### 注意:
+  /// - 该方法不会改变已分配的比特大小 `_size`，仅调整存储单元数量。
+  /// - 只移除完全未使用的存储单元，部分使用的存储单元将保留。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(100); // 分配100个位的空间。
+  /// print(buffer.size); // 输出: 100
+  /// print(buffer._words.length); // 假设输出: 2
+  /// buffer.trim(); // 移除多余的存储单元。
+  /// print(buffer._words.length); // 如果多余单元被移除，可能输出: 2
+  /// ```
   void trim() {
     int free = _words.length * BITS_PER_WORD - _size;
     // 移除超出当前大小的存储单元。
@@ -69,7 +107,31 @@ class BitBuffer {
     return toSectionString(0, _size);
   }
 
-  /// 返回缓冲区中指定范围的比特字符串表示。
+  /// 返回指定范围内比特的字符串表示形式。
+  ///
+  /// ### 参数:
+  /// - `start`: 起始位置（以比特为单位）。
+  ///   - 必须在 `[0, size - 1]` 范围内。
+  /// - `length`: 要获取的比特长度。
+  ///   - 如果指定范围超出缓冲区大小，则返回实际可用的部分。
+  ///
+  /// ### 返回值:
+  /// - `String`: 指定范围内的比特值的字符串表示形式（由 `0` 和 `1` 组成）。
+  ///
+  /// ### 注意:
+  /// - 该方法不会修改缓冲区内容，仅用于获取部分比特的视图。
+  /// - 超出缓冲区范围的部分将被自动截断。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(16); // 分配16位缓冲区。
+  /// buffer.setBit(0, 1);
+  /// buffer.setBit(1, 0);
+  /// buffer.setBit(2, 1);
+  /// print(buffer.toSectionString(0, 3)); // 输出: "101"
+  /// print(buffer.toSectionString(0, 16)); // 输出: "1010000000000000"
+  /// ```
   String toSectionString(int start, int length) {
     int end = min(start + length, _size);
     StringBuffer stringBuffer = StringBuffer();
@@ -79,7 +141,30 @@ class BitBuffer {
     return stringBuffer.toString();
   }
 
-  /// 获取指定位置的比特值。
+  /// 从 `BitBuffer` 中获取指定位置的比特值。
+  ///
+  /// ### 参数:
+  /// - `position`: 要获取的比特索引。
+  ///   - 必须在 `[0, size - 1]` 范围内。
+  ///
+  /// ### 返回值:
+  /// - `int`: 指定位置的比特值，取值为 0 或 1。
+  ///
+  /// ### 异常:
+  /// - `RangeError`: 如果 `position` 小于 0 或大于等于缓冲区的大小，将抛出范围错误。
+  ///
+  /// ### 注意:
+  /// - `position` 用于计算存储单元（word）和单元内的比特索引。
+  /// - 使用位操作高效地提取比特值。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(32); // 分配32位缓冲区。
+  /// buffer.setBit(5, 1); // 将第5个位设置为1。
+  /// print(buffer.getBit(5)); // 输出: 1
+  /// print(buffer.getBit(0)); // 输出: 0
+  /// ```
   int getBit(int position) {
     // 检查位置是否在有效范围内。
     if (position < 0 || position >= _size) {
@@ -92,7 +177,30 @@ class BitBuffer {
     return (_words[wordIndex] >> bitIndex) & 0x00000001;
   }
 
-  /// 设置指定位置的比特值。
+  /// 设置 `BitBuffer` 中指定位置的比特值。
+  ///
+  /// ### 参数:
+  /// - `position`: 要设置的比特索引。
+  ///   - 必须在 `[0, size - 1]` 范围内。
+  /// - `bit`: 要设置的比特值。
+  ///   - 只能为 0 或 1。
+  ///
+  /// ### 异常:
+  /// - `RangeError`: 如果 `position` 小于 0 或大于等于缓冲区的大小，将抛出范围错误。
+  ///
+  /// ### 注意:
+  /// - `position` 用于计算存储单元（word）和单元内的比特索引。
+  /// - 根据 `bit` 的值，清除或设置目标比特。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(32); // 分配32位缓冲区。
+  /// buffer.setBit(5, 1); // 将第5个位设置为1。
+  /// print(buffer.getBit(5)); // 输出: 1
+  /// buffer.setBit(5, 0); // 将第5个位清除为0。
+  /// print(buffer.getBit(5)); // 输出: 0
+  /// ```
   void setBit(int position, int bit) {
     // 检查位置是否在有效范围内。
     if (position < 0 || position >= _size) {
