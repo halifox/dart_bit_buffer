@@ -40,8 +40,23 @@ class BitBuffer {
   /// Uint8List values = Uint8List.fromList([1, 2, 3]);
   /// BitBuffer buffer = BitBuffer.formUInt8List(values);
   /// ```
-  factory BitBuffer.formUInt8List(Uint8List data) {
-    return BitBuffer.formUIntList(data, binaryDigits: 8);
+  factory BitBuffer.formUInt8List(
+    Uint8List data, {
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    return BitBuffer.formUIntList(data, binaryDigits: 8, order: order);
+  }
+
+  Uint8List toUInt8List({
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    List<int> data = [];
+    BitBufferReader reader = this.reader();
+    while (reader.remainingSize > 0) {
+      int value = reader.getUnsignedInt(binaryDigits: 8, order: order);
+      data.add(value);
+    }
+    return Uint8List.fromList(data);
   }
 
   /// 从无符号整型列表创建一个 `BitBuffer` 实例。
@@ -60,11 +75,15 @@ class BitBuffer {
   /// List<int> values = [1, 2, 3];
   /// BitBuffer buffer = BitBuffer.formUIntList(values, binaryDigits: 32);
   /// ```
-  factory BitBuffer.formUIntList(List<int> data, {int binaryDigits = 64}) {
+  factory BitBuffer.formUIntList(
+    List<int> data, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
     BitBuffer bitBuffer = BitBuffer();
     BitBufferWriter writer = bitBuffer.writer();
     for (int value in data) {
-      writer.putUnsignedInt(value, binaryDigits: binaryDigits);
+      writer.putUnsignedInt(value, binaryDigits: binaryDigits, order: order);
     }
     return bitBuffer;
   }
@@ -85,11 +104,15 @@ class BitBuffer {
   /// List<int> values = [1, -2, 3];
   /// BitBuffer buffer = BitBuffer.formIntList(values, binaryDigits: 32);
   /// ```
-  factory BitBuffer.formIntList(List<int> data, {int binaryDigits = 64}) {
+  factory BitBuffer.formIntList(
+    List<int> data, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
     BitBuffer bitBuffer = BitBuffer();
     BitBufferWriter writer = bitBuffer.writer();
     for (int value in data) {
-      writer.putInt(value, binaryDigits: binaryDigits);
+      writer.putInt(value, binaryDigits: binaryDigits, order: order);
     }
     return bitBuffer;
   }
