@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:bit_buffer/bit_buffer.dart';
 import 'package:test/test.dart';
 
@@ -17,6 +19,13 @@ main() {
 
       expect(() => buffer.setBit(-1, 0), throwsA(isA<RangeError>()));
       expect(() => buffer.setBit(129, 0), throwsA(isA<RangeError>()));
+    });
+
+    test("Uint8List", () {
+      var data = Uint8List.fromList([1, 2, 3, 4, 5, 6, 7]);
+      var bitBuffer = BitBuffer.formUInt8List(data);
+      var uInt8List = bitBuffer.toUInt8List();
+      expect(data, uInt8List);
     });
 
     test("int64 msb", () {
