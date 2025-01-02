@@ -1,6 +1,6 @@
 name: bit_buffer
 description: "A new Flutter project."
-version: 1.0.2
+version: 1.0.3
 homepage: https://github.com/halifox/dart_bit_buffer
 
 environment:
