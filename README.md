@@ -106,7 +106,7 @@ int value = reader.getInt(binaryDigits: 32);  // 读取一个有符号整数
 
 ## 📜 许可证
 
-本项目遵循 [LGPL-3.0 License](License)。
+本项目遵循 [LGPL-3.0 License](LICENSE)。
 
 ---
 
