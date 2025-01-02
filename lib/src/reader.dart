@@ -4,11 +4,15 @@ class BitBufferReader {
   /// 当前读取位置，以比特为单位。
   int _position = 0;
 
+  int get postion => _position;
+
   /// 关联的 `BitBuffer` 对象，用于从中读取比特。
   final BitBuffer _buffer;
 
   /// 构造函数，初始化 `BitBufferReader` 并与指定的 `BitBuffer` 关联。
   BitBufferReader(this._buffer);
+
+  int get remainingSize => _buffer.size - _position;
 
   /// 跳过指定数量的比特，更新当前读取位置。
   ///
