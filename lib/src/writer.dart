@@ -170,7 +170,30 @@ class BitBufferWriter {
     _buffer.putInt(_position, value, binaryDigits: binaryDigits, order: order);
     _position += binaryDigits; // 更新写入位置。
   }
-
+  /// 写入一个有符号大整数到 `BitBuffer` 中，按照指定的位数和位序进行编码。
+  ///
+  /// ### 参数:
+  /// - `value`: 要写入的有符号大整数。
+  /// - `binaryDigits` (可选): 使用的二进制位数。
+  ///   - 默认值: 128 位。
+  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
+  ///
+  /// ### 功能:
+  /// - 按位将大整数值写入缓冲区。
+  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
+  ///
+  /// ### 注意:
+  /// - 如果缓冲区剩余空间不足，方法会自动扩展缓冲区。
+  /// - 如果 `binaryDigits` 大于实际大整数的位数，整数高位将补零。
+  /// - 调用此方法后，写入位置 `_position` 会自动更新。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// BitBufferWriter writer = buffer.writer();
+  /// writer.putBigInt(BigInt.from(-123456), binaryDigits: 128); // 写入有符号大整数
+  /// print(buffer.toString()); // 输出对应的二进制表示
+  /// ```
   void putBigInt(
     BigInt value, {
     int binaryDigits = 128,
@@ -215,7 +238,30 @@ class BitBufferWriter {
     _buffer.putUnsignedInt(_position, value, binaryDigits: binaryDigits, order: order);
     _position += binaryDigits; // 更新写入位置。
   }
-
+  /// 写入一个无符号大整数到 `BitBuffer` 中，按照指定的位数和位序进行编码。
+  ///
+  /// ### 参数:
+  /// - `value`: 要写入的无符号大整数。
+  /// - `binaryDigits` (可选): 使用的二进制位数。
+  ///   - 默认值: 128 位。
+  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
+  ///
+  /// ### 功能:
+  /// - 按位将大整数值写入缓冲区。
+  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
+  ///
+  /// ### 注意:
+  /// - 如果缓冲区剩余空间不足，方法会自动扩展缓冲区。
+  /// - 如果 `binaryDigits` 大于实际大整数的位数，整数高位将补零。
+  /// - 调用此方法后，写入位置 `_position` 会自动更新。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// BitBufferWriter writer = buffer.writer();
+  /// writer.putUnsignedBigInt(BigInt.from(123456), binaryDigits: 128); // 写入大整数
+  /// print(buffer.toString()); // 输出对应的二进制表示
+  /// ```
   void putUnsignedBigInt(
     BigInt value, {
     int binaryDigits = 128,

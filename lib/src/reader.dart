@@ -122,6 +122,28 @@ class BitBufferReader {
     return value;
   }
 
+  /// 从 `BitBuffer` 中读取一个有符号大整数，按照指定的位数和位序进行解码。
+  ///
+  /// ### 参数:
+  /// - `binaryDigits` (可选): 使用的二进制位数。
+  ///   - 默认值: 128 位。
+  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
+  ///
+  /// ### 功能:
+  /// - 按位从缓冲区读取有符号大整数。
+  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
+  ///
+  /// ### 注意:
+  /// - 调用此方法后，读取位置 `_position` 会自动更新。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// BitBufferWriter writer = buffer.writer();
+  /// writer.putBigInt(BigInt.from(-123456), binaryDigits: 128);
+  /// BigInt value = writer.getBigInt(binaryDigits: 128);
+  /// print(value); // 输出: -123456
+  /// ```
   BigInt getBigInt({
     int binaryDigits = 128,
     BitOrder order = BitOrder.MSBFirst,
@@ -161,6 +183,28 @@ class BitBufferReader {
     return value;
   }
 
+  /// 从 `BitBuffer` 中读取一个无符号大整数，按照指定的位数和位序进行解码。
+  ///
+  /// ### 参数:
+  /// - `binaryDigits` (可选): 使用的二进制位数。
+  ///   - 默认值: 128 位。
+  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
+  ///
+  /// ### 功能:
+  /// - 按位从缓冲区读取无符号大整数。
+  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
+  ///
+  /// ### 注意:
+  /// - 调用此方法后，读取位置 `_position` 会自动更新。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// BitBufferWriter writer = buffer.writer();
+  /// writer.putUnsignedBigInt(BigInt.from(123456), binaryDigits: 128);
+  /// BigInt value = writer.getUnsignedBigInt(binaryDigits: 128);
+  /// print(value); // 输出: 123456
+  /// ```
   BigInt getUnsignedBigInt({
     int binaryDigits = 128,
     BitOrder order = BitOrder.MSBFirst,

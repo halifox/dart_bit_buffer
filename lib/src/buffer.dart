@@ -310,6 +310,23 @@ class BitBuffer {
     }
   }
 
+  /// 获取指定偏移位置的有符号整数值。
+  ///
+  /// ### 参数:
+  /// - `offset`: 起始偏移位置（以比特为单位）。
+  /// - `binaryDigits`: 要读取的比特位数，默认为 64。
+  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
+  ///
+  /// ### 返回值:
+  /// - `int`: 读取到的有符号整数值。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(64); // 分配64位缓冲区。
+  /// buffer.putInt(0, -12345); // 设置一个负数值。
+  /// print(buffer.getInt(0)); // 输出: -12345
+  /// ```
   int getInt(
     int offset, {
     int binaryDigits = 64,
@@ -330,6 +347,21 @@ class BitBuffer {
     return number;
   }
 
+  /// 设置指定偏移位置的有符号整数值。
+  ///
+  /// ### 参数:
+  /// - `offset`: 起始偏移位置（以比特为单位）。
+  /// - `value`: 要设置的有符号整数值。
+  /// - `binaryDigits`: 要设置的比特位数，默认为 64。
+  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(64); // 分配64位缓冲区。
+  /// buffer.putInt(0, -12345); // 设置一个负数值。
+  /// print(buffer.getInt(0)); // 输出: -12345
+  /// ```
   void putInt(
     int offset,
     int value, {
@@ -346,6 +378,23 @@ class BitBuffer {
     putUnsignedInt(offset, value, binaryDigits: binaryDigits, order: order);
   }
 
+  /// 获取指定偏移位置的无符号大整数值。
+  ///
+  /// ### 参数:
+  /// - `offset`: 起始偏移位置（以比特为单位）。
+  /// - `binaryDigits`: 要读取的比特位数，默认为 128。
+  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
+  ///
+  /// ### 返回值:
+  /// - `BigInt`: 读取到的无符号大整数值。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(128); // 分配128位缓冲区。
+  /// buffer.putBigInt(0, BigInt.from(1234567890123456789)); // 设置一个大整数。
+  /// print(buffer.getBigInt(0)); // 输出: 1234567890123456789
+  /// ```
   BigInt getBigInt(
     int offset, {
     int binaryDigits = 128,
@@ -367,6 +416,21 @@ class BitBuffer {
     return number;
   }
 
+  /// 设置指定偏移位置的无符号大整数值。
+  ///
+  /// ### 参数:
+  /// - `offset`: 起始偏移位置（以比特为单位）。
+  /// - `value`: 要设置的无符号大整数值。
+  /// - `binaryDigits`: 要设置的比特位数，默认为 128。
+  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(128); // 分配128位缓冲区。
+  /// buffer.putBigInt(0, BigInt.from(1234567890123456789)); // 设置一个大整数。
+  /// print(buffer.getBigInt(0)); // 输出: 1234567890123456789
+  /// ```
   void putBigInt(
     int offset,
     BigInt value, {
@@ -383,6 +447,23 @@ class BitBuffer {
     putUnsignedBigInt(offset, value, binaryDigits: binaryDigits, order: order);
   }
 
+  /// 获取指定偏移位置的无符号整数值。
+  ///
+  /// ### 参数:
+  /// - `offset`: 起始偏移位置（以比特为单位）。
+  /// - `binaryDigits`: 要读取的比特位数，默认为 64。
+  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
+  ///
+  /// ### 返回值:
+  /// - `int`: 读取到的无符号整数值。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(64); // 分配64位缓冲区。
+  /// buffer.putUnsignedInt(0, 12345); // 设置一个无符号整数值。
+  /// print(buffer.getUnsignedInt(0)); // 输出: 12345
+  /// ```
   int getUnsignedInt(
     int offset, {
     int binaryDigits = 64,
@@ -404,6 +485,21 @@ class BitBuffer {
     return value;
   }
 
+  /// 设置指定偏移位置的无符号整数值。
+  ///
+  /// ### 参数:
+  /// - `offset`: 起始偏移位置（以比特为单位）。
+  /// - `value`: 要设置的无符号整数值。
+  /// - `binaryDigits`: 要设置的比特位数，默认为 64。
+  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(64); // 分配64位缓冲区。
+  /// buffer.putUnsignedInt(0, 12345); // 设置一个无符号整数值。
+  /// print(buffer.getUnsignedInt(0)); // 输出: 12345
+  /// ```
   void putUnsignedInt(
     int offset,
     int value, {
@@ -425,6 +521,23 @@ class BitBuffer {
     }
   }
 
+  /// 获取指定偏移位置的无符号大整数值。
+  ///
+  /// ### 参数:
+  /// - `offset`: 起始偏移位置（以比特为单位）。
+  /// - `binaryDigits`: 要读取的比特位数，默认为 128。
+  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
+  ///
+  /// ### 返回值:
+  /// - `BigInt`: 读取到的无符号大整数值。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(128); // 分配128位缓冲区。
+  /// buffer.putUnsignedBigInt(0, BigInt.from(1234567890123456789)); // 设置一个无符号大整数。
+  /// print(buffer.getUnsignedBigInt(0)); // 输出: 1234567890123456789
+  /// ```
   BigInt getUnsignedBigInt(
     int offset, {
     int binaryDigits = 128,
@@ -449,6 +562,21 @@ class BitBuffer {
     return value;
   }
 
+  /// 设置指定偏移位置的无符号大整数值。
+  ///
+  /// ### 参数:
+  /// - `offset`: 起始偏移位置（以比特为单位）。
+  /// - `value`: 要设置的无符号大整数值。
+  /// - `binaryDigits`: 要设置的比特位数，默认为 128。
+  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(128); // 分配128位缓冲区。
+  /// buffer.putUnsignedBigInt(0, BigInt.from(1234567890123456789)); // 设置一个无符号大整数。
+  /// print(buffer.getUnsignedBigInt(0)); // 输出: 1234567890123456789
+  /// ```
   void putUnsignedBigInt(
     int offset,
     BigInt value, {
