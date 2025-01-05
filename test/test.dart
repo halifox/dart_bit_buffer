@@ -145,6 +145,42 @@ main() {
             "0000000000000000000000000000000000000000000000000000000000000001"
             "0000000000000000000000000000000000000000000000000111111111111111");
       });
+      run(() {
+        var bitBuffer = BitBuffer.formIntList(data, binaryDigits: 16, order: BitOrder.MSBFirst);
+        var intList = bitBuffer.getIntList(0, 16 * 3, binaryDigits: 16, order: BitOrder.MSBFirst);
+        expect(intList, [-32768, -1, 0]);
+      });
+      run(() {
+        var bitBuffer = BitBuffer.formIntList(data, binaryDigits: 16, order: BitOrder.MSBFirst);
+        var intList = bitBuffer.getIntList(0, 16 * 5, binaryDigits: 16, order: BitOrder.MSBFirst);
+        expect(intList, [-32768, -1, 0, 1, 32767]);
+      });
+      run(() {
+        var bitBuffer = BitBuffer.formIntList(data, binaryDigits: 16, order: BitOrder.MSBFirst);
+        var intList = bitBuffer.getIntList(16, 16 * 3, binaryDigits: 16, order: BitOrder.MSBFirst);
+        expect(intList, [-1, 0, 1]);
+      });
+      run(() {
+        var bitBuffer = BitBuffer.formIntList(data, binaryDigits: 16, order: BitOrder.MSBFirst);
+        var intList = bitBuffer.getIntList(32, 16 * 3, binaryDigits: 16, order: BitOrder.MSBFirst);
+        expect(intList, [0, 1, 32767]);
+      });
+      run(() {
+        var bitBuffer = BitBuffer();
+        bitBuffer.allocate(16 * 5);
+        bitBuffer.putIntList(0, data, binaryDigits: 16, order: BitOrder.MSBFirst);
+        var intList = bitBuffer.getIntList(32, 16 * 3, binaryDigits: 16, order: BitOrder.MSBFirst);
+        expect(intList, [0, 1, 32767]);
+      });
+    });
+
+    test("utf-8", () {
+      var value = "hello world!";
+
+      var bitBuffer = BitBuffer();
+      bitBuffer.allocate(12 * 64);
+      bitBuffer.putStringByUtf8(0, value, binaryDigits: 64, order: BitOrder.MSBFirst);
+      expect(bitBuffer.getStringByUtf8(0, 12 * 64, binaryDigits: 64, order: BitOrder.MSBFirst), value);
     });
   });
 }
