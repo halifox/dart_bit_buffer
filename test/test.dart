@@ -178,9 +178,10 @@ main() {
       var value = "hello world!";
 
       var bitBuffer = BitBuffer();
-      bitBuffer.allocate(12 * 64);
-      bitBuffer.putStringByUtf8(0, value, binaryDigits: 64, order: BitOrder.MSBFirst);
-      expect(bitBuffer.getStringByUtf8(0, 12 * 64, binaryDigits: 64, order: BitOrder.MSBFirst), value);
+      bitBuffer.allocate(12 * 8);
+      bitBuffer.putStringByUtf8(0, value, binaryDigits: 8, order: BitOrder.MSBFirst);
+      expect(bitBuffer.getStringByUtf8(0, 12 * 8, binaryDigits: 8, order: BitOrder.MSBFirst), value);
+      expect(bitBuffer.toString(), "011010000110010101101100011011000110111100100000011101110110111101110010011011000110010000100001");
     });
   });
 }
