@@ -276,7 +276,7 @@ class BitBufferWriter {
 
   void putIntList(
     List<int> value, {
-    int binaryDigits = 64,
+    int binaryDigits = 8,
     BitOrder order = BitOrder.MSBFirst,
   }) {
     allocateIfNeeded(binaryDigits); // 确保有足够空间写入指定位数的整数。
@@ -286,7 +286,7 @@ class BitBufferWriter {
 
   void putStringByUtf8(
     String value, {
-    int binaryDigits = 64,
+    int binaryDigits = 8,
     BitOrder order = BitOrder.MSBFirst,
   }) {
     allocateIfNeeded(binaryDigits); // 确保有足够空间写入指定位数的整数。

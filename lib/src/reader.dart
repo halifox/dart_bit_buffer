@@ -216,7 +216,7 @@ class BitBufferReader {
 
   List<int> getIntList(
     int size, {
-    int binaryDigits = 64,
+    int binaryDigits = 8,
     BitOrder order = BitOrder.MSBFirst,
   }) {
     List<int> value = _buffer.getIntList(_position, size, binaryDigits: binaryDigits, order: order);
@@ -226,7 +226,7 @@ class BitBufferReader {
 
   String getStringByUtf8(
     int size, {
-    int binaryDigits = 64,
+    int binaryDigits = 8,
     BitOrder order = BitOrder.MSBFirst,
   }) {
     String value = _buffer.getStringByUtf8(_position, size, binaryDigits: binaryDigits, order: order);

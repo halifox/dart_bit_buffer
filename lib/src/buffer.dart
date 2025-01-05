@@ -664,7 +664,7 @@ class BitBuffer {
   /// ### 参数:
   /// - `offset`: 起始偏移位置（以比特为单位）。
   /// - `size`: 要获取的数据大小（以比特为单位）。
-  /// - `binaryDigits`: 每个整数的比特数，默认为 64。
+  /// - `binaryDigits`: 每个整数的比特数，默认为 8。
   /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
   ///
   /// ### 返回值:
@@ -682,7 +682,7 @@ class BitBuffer {
   List<int> getIntList(
     int offset,
     int size, {
-    int binaryDigits = 64,
+    int binaryDigits = 8,
     BitOrder order = BitOrder.MSBFirst,
   }) {
     List<int> data = [];
@@ -698,7 +698,7 @@ class BitBuffer {
   /// ### 参数:
   /// - `offset`: 起始偏移位置（以比特为单位）。
   /// - `values`: 要设置的整数列表。
-  /// - `binaryDigits`: 每个整数的比特数，默认为 64。
+  /// - `binaryDigits`: 每个整数的比特数，默认为 8。
   /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
   ///
   /// ### 示例:
@@ -711,7 +711,7 @@ class BitBuffer {
   void putIntList(
     int offset,
     List<int> values, {
-    int binaryDigits = 64,
+    int binaryDigits = 8,
     BitOrder order = BitOrder.MSBFirst,
   }) {
     int i = 0;
@@ -726,7 +726,7 @@ class BitBuffer {
   /// ### 参数:
   /// - `offset`: 起始偏移位置（以比特为单位）。
   /// - `size`: 要获取的字节数。
-  /// - `binaryDigits`: 每个整数的比特数，默认为 64。
+  /// - `binaryDigits`: 每个整数的比特数，默认为 8。
   /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
   ///
   /// ### 返回值:
@@ -743,7 +743,7 @@ class BitBuffer {
   String getStringByUtf8(
     int offset,
     int size, {
-    int binaryDigits = 64,
+    int binaryDigits = 8,
     BitOrder order = BitOrder.MSBFirst,
   }) {
     List<int> utf8Bytes = getIntList(offset, size, binaryDigits: binaryDigits, order: order);
@@ -755,7 +755,7 @@ class BitBuffer {
   /// ### 参数:
   /// - `offset`: 起始偏移位置（以比特为单位）。
   /// - `value`: 要设置的字符串。
-  /// - `binaryDigits`: 每个整数的比特数，默认为 64。
+  /// - `binaryDigits`: 每个整数的比特数，默认为 8。
   /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
   ///
   /// ### 示例:
@@ -768,10 +768,10 @@ class BitBuffer {
   void putStringByUtf8(
     int offset,
     String value, {
-    int binaryDigits = 64,
+    int binaryDigits = 8,
     BitOrder order = BitOrder.MSBFirst,
   }) {
     List<int> utf8Bytes = utf8.encode(value);
-    putIntList(offset, utf8Bytes);
+    putIntList(offset, utf8Bytes, binaryDigits: binaryDigits, order: order);
   }
 }
