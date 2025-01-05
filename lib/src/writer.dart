@@ -171,6 +171,16 @@ class BitBufferWriter {
     _position += binaryDigits; // 更新写入位置。
   }
 
+  void putBigInt(
+    BigInt value, {
+    int binaryDigits = 128,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    allocateIfNeeded(binaryDigits); // 确保有足够空间写入指定位数的整数。
+    _buffer.putBigInt(_position, value, binaryDigits: binaryDigits, order: order);
+    _position += binaryDigits; // 更新写入位置。
+  }
+
   /// 写入一个无符号整数到 `BitBuffer` 中，按照指定的位数和位序进行编码。
   ///
   /// ### 参数:
@@ -208,7 +218,7 @@ class BitBufferWriter {
 
   void putUnsignedBigInt(
     BigInt value, {
-    int binaryDigits = 64,
+    int binaryDigits = 128,
     BitOrder order = BitOrder.MSBFirst,
   }) {
     allocateIfNeeded(binaryDigits); // 确保有足够空间写入指定位数的整数。

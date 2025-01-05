@@ -122,6 +122,15 @@ class BitBufferReader {
     return value;
   }
 
+  BigInt getBigInt({
+    int binaryDigits = 128,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    BigInt value = _buffer.getBigInt(_position, binaryDigits: binaryDigits, order: order);
+    _position += binaryDigits; // 更新读取位置。
+    return value;
+  }
+
   /// 从缓冲区读取指定数量的无符号整数，按给定的顺序解析每个位。
   ///
   /// ### 参数:
@@ -153,7 +162,7 @@ class BitBufferReader {
   }
 
   BigInt getUnsignedBigInt({
-    int binaryDigits = 64,
+    int binaryDigits = 128,
     BitOrder order = BitOrder.MSBFirst,
   }) {
     BigInt value = _buffer.getUnsignedBigInt(_position, binaryDigits: binaryDigits, order: order);

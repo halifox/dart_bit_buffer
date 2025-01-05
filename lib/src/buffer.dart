@@ -346,6 +346,43 @@ class BitBuffer {
     putUnsignedInt(offset, value, binaryDigits: binaryDigits, order: order);
   }
 
+  BigInt getBigInt(
+    int offset, {
+    int binaryDigits = 128,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    // 先读取无符号整数值。
+    BigInt number = getUnsignedBigInt(offset, binaryDigits: binaryDigits, order: order);
+
+    // 检查符号位，判断是否为负数。
+    int shiftAmount = binaryDigits - 1;
+    BigInt isNegative = number >> shiftAmount;
+
+    if (isNegative != BigInt.zero) {
+      // 如果是负数，转换为补码表示的有符号整数。
+      BigInt mask = (BigInt.one << (binaryDigits - 1)) - BigInt.one; // 获取有效位的掩码。
+      number = BigInt.from(-1) * (~(number - BigInt.one) & mask); // 还原负数值。
+    }
+
+    return number;
+  }
+
+  void putBigInt(
+    int offset,
+    BigInt value, {
+    int binaryDigits = 128,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    if (value.isNegative) {
+      // 处理负数值，转换为补码形式。
+      BigInt mask = (BigInt.one << binaryDigits) - BigInt.one;
+      value = ~(-value); // 取反。
+      value += BigInt.one; // 加 1 形成补码。
+      value &= mask; // 保留指定位数。
+    }
+    putUnsignedBigInt(offset, value, binaryDigits: binaryDigits, order: order);
+  }
+
   int getUnsignedInt(
     int offset, {
     int binaryDigits = 64,
@@ -390,7 +427,7 @@ class BitBuffer {
 
   BigInt getUnsignedBigInt(
     int offset, {
-    int binaryDigits = 64,
+    int binaryDigits = 128,
     BitOrder order = BitOrder.MSBFirst,
   }) {
     BigInt value = BigInt.zero;
@@ -415,7 +452,7 @@ class BitBuffer {
   void putUnsignedBigInt(
     int offset,
     BigInt value, {
-    int binaryDigits = 64,
+    int binaryDigits = 128,
     BitOrder order = BitOrder.MSBFirst,
   }) {
     for (int i = 0; i < binaryDigits; i++) {
