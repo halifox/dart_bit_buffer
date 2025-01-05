@@ -22,7 +22,7 @@ dependencies:
   bit_buffer:
     git:
       url: https://github.com/halifox/dart_bit_buffer
-      ref: 1.0.4
+      ref: 1.0.5
 ```
 
 ---
@@ -290,7 +290,7 @@ void main() {
 
 我们欢迎任何形式的社区贡献！
 
-请阅读 [贡献指南 (CONTRIBUTING.md)](CONTRIBUTING.md)，了解如何提交 Issue、请求功能或贡献代码。
+请阅读 [贡献指南](CONTRIBUTING.md)，了解如何提交 Issue、请求功能或贡献代码。
 
 ---
 
