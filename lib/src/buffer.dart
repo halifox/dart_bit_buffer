@@ -118,6 +118,19 @@ class BitBuffer {
     return bitBuffer;
   }
 
+  List<int> toUIntList({
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    List<int> data = [];
+    BitBufferReader reader = this.reader();
+    while (reader.remainingSize > 0) {
+      int value = reader.getUnsignedInt(binaryDigits: binaryDigits, order: order);
+      data.add(value);
+    }
+    return data;
+  }
+
   /// 从 `List<int>` 创建一个 `BitBuffer`，按指定的位数和位序进行编码。
   ///
   /// ### 参数:
@@ -149,6 +162,19 @@ class BitBuffer {
       writer.putInt(value, binaryDigits: binaryDigits, order: order);
     }
     return bitBuffer;
+  }
+
+  List<int> toIntList({
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    List<int> data = [];
+    BitBufferReader reader = this.reader();
+    while (reader.remainingSize > 0) {
+      int value = reader.getInt(binaryDigits: binaryDigits, order: order);
+      data.add(value);
+    }
+    return data;
   }
 
   /// 返回一个用于读取的 `BitBufferReader` 实例。
@@ -374,7 +400,7 @@ class BitBuffer {
 
     if (isNegative != 0) {
       // 如果是负数，转换为补码表示的有符号整数。
-      int mask = (1 << (binaryDigits - 1)) - 1; // 获取有效位的掩码。
+      int mask = (1 << binaryDigits) - 1; // 获取有效位的掩码。
       number = -(~(number - 1) & mask); // 还原负数值。
     }
 
@@ -443,7 +469,7 @@ class BitBuffer {
 
     if (isNegative != BigInt.zero) {
       // 如果是负数，转换为补码表示的有符号整数。
-      BigInt mask = (BigInt.one << (binaryDigits - 1)) - BigInt.one; // 获取有效位的掩码。
+      BigInt mask = (BigInt.one << binaryDigits) - BigInt.one; // 获取有效位的掩码。
       number = -(~(number - BigInt.one) & mask); // 还原负数值。
     }
 
