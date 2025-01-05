@@ -170,6 +170,7 @@ class BitBufferWriter {
     _buffer.putInt(_position, value, binaryDigits: binaryDigits, order: order);
     _position += binaryDigits; // 更新写入位置。
   }
+
   /// 写入一个有符号大整数到 `BitBuffer` 中，按照指定的位数和位序进行编码。
   ///
   /// ### 参数:
@@ -238,6 +239,7 @@ class BitBufferWriter {
     _buffer.putUnsignedInt(_position, value, binaryDigits: binaryDigits, order: order);
     _position += binaryDigits; // 更新写入位置。
   }
+
   /// 写入一个无符号大整数到 `BitBuffer` 中，按照指定的位数和位序进行编码。
   ///
   /// ### 参数:
@@ -269,6 +271,26 @@ class BitBufferWriter {
   }) {
     allocateIfNeeded(binaryDigits); // 确保有足够空间写入指定位数的整数。
     _buffer.putUnsignedBigInt(_position, value, binaryDigits: binaryDigits, order: order);
+    _position += binaryDigits; // 更新写入位置。
+  }
+
+  void putIntList(
+    List<int> value, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    allocateIfNeeded(binaryDigits); // 确保有足够空间写入指定位数的整数。
+    _buffer.putIntList(_position, value, binaryDigits: binaryDigits, order: order);
+    _position += binaryDigits; // 更新写入位置。
+  }
+
+  void putStringByUtf8(
+    String value, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    allocateIfNeeded(binaryDigits); // 确保有足够空间写入指定位数的整数。
+    _buffer.putStringByUtf8(_position, value, binaryDigits: binaryDigits, order: order);
     _position += binaryDigits; // 更新写入位置。
   }
 }

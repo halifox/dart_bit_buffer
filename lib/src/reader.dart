@@ -213,4 +213,24 @@ class BitBufferReader {
     _position += binaryDigits; // 更新读取位置。
     return value;
   }
+
+  List<int> getIntList(
+    int size, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    List<int> value = _buffer.getIntList(_position, size, binaryDigits: binaryDigits, order: order);
+    _position += binaryDigits; // 更新读取位置。
+    return value;
+  }
+
+  String getStringByUtf8(
+    int size, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    String value = _buffer.getStringByUtf8(_position, size, binaryDigits: binaryDigits, order: order);
+    _position += binaryDigits; // 更新读取位置。
+    return value;
+  }
 }
