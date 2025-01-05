@@ -25,20 +25,24 @@ class BitBuffer {
   /// 默认构造函数，初始化 BitBuffer。
   BitBuffer();
 
-  /// 从 `Uint8List` 创建一个 `BitBuffer` 实例。
+  /// 从 `Uint8List` 创建一个 `BitBuffer`，按指定的位序进行解码。
   ///
-  /// 每个字节按照 8 个比特写入缓冲区。
+  /// ### 参数:
+  /// - `data`: 用于创建 `BitBuffer` 的 `Uint8List` 数据。
+  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
   ///
-  /// 参数:
-  /// - `data`: 包含无符号 8 位整数的列表。
+  /// ### 功能:
+  /// - 将 `Uint8List` 中的每个字节（8 位）按位读取，并转化为 `BitBuffer`。
+  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
   ///
-  /// 返回:
-  /// - 一个新的 `BitBuffer` 实例，包含写入的无符号 8 位整数数据。
+  /// ### 注意:
+  /// - 每个字节的 8 位将被按指定的位序顺序添加到 `BitBuffer` 中。
   ///
-  /// 示例:
+  /// ### 示例:
   /// ```dart
-  /// Uint8List values = Uint8List.fromList([1, 2, 3]);
-  /// BitBuffer buffer = BitBuffer.formUInt8List(values);
+  /// Uint8List data = Uint8List.fromList([255, 127]);
+  /// BitBuffer buffer = BitBuffer.formUInt8List(data);
+  /// print(buffer.toString()); // 输出对应的二进制表示
   /// ```
   factory BitBuffer.formUInt8List(
     Uint8List data, {
@@ -47,6 +51,27 @@ class BitBuffer {
     return BitBuffer.formUIntList(data, binaryDigits: 8, order: order);
   }
 
+  /// 将 `BitBuffer` 转换为一个 `Uint8List`，按指定的位序进行编码。
+  ///
+  /// ### 参数:
+  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
+  ///
+  /// ### 功能:
+  /// - 按位读取 `BitBuffer` 中的无符号整数，将其转换为 `Uint8List`。
+  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
+  ///
+  /// ### 注意:
+  /// - 转换过程中会按 8 位（一个字节）对缓冲区进行读取，直到全部数据被处理完。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// BitBufferWriter writer = buffer.writer();
+  /// writer.putUnsignedInt(255, binaryDigits: 8); // 写入 255
+  /// writer.putUnsignedInt(127, binaryDigits: 8); // 写入 127
+  /// Uint8List uint8List = buffer.toUInt8List();
+  /// print(uint8List); // 输出: [255, 127]
+  /// ```
   Uint8List toUInt8List({
     BitOrder order = BitOrder.MSBFirst,
   }) {
@@ -59,21 +84,26 @@ class BitBuffer {
     return Uint8List.fromList(data);
   }
 
-  /// 从无符号整型列表创建一个 `BitBuffer` 实例。
+  /// 从 `List<int>` 创建一个 `BitBuffer`，按指定的位数和位序进行编码，要求 `data` 中的每个整数都是无符号类型。
   ///
-  /// 每个整型值将按照指定的二进制位数写入缓冲区。
+  /// ### 参数:
+  /// - `data`: 用于创建 `BitBuffer` 的无符号整数列表。
+  /// - `binaryDigits` (可选): 每个整数使用的二进制位数，默认为 64 位。
+  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
   ///
-  /// 参数:
-  /// - `data`: 包含无符号整数值的列表。
-  /// - `binaryDigits`: 每个整数占用的比特数，默认为 64。
+  /// ### 功能:
+  /// - 将 `List<int>` 中的每个无符号整数按指定的位数和位序转换为 `BitBuffer`。
+  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
   ///
-  /// 返回:
-  /// - 一个新的 `BitBuffer` 实例，包含写入的无符号整数数据。
+  /// ### 注意:
+  /// - 每个整数会根据 `binaryDigits` 参数的位数进行编码。
+  /// - `data` 中的每个整数必须是无符号的。
   ///
-  /// 示例:
+  /// ### 示例:
   /// ```dart
-  /// List<int> values = [1, 2, 3];
-  /// BitBuffer buffer = BitBuffer.formUIntList(values, binaryDigits: 32);
+  /// List<int> data = [255, 127]; // 无符号整数列表
+  /// BitBuffer buffer = BitBuffer.formUIntList(data, binaryDigits: 8);
+  /// print(buffer.toString()); // 输出对应的二进制表示
   /// ```
   factory BitBuffer.formUIntList(
     List<int> data, {
@@ -88,21 +118,25 @@ class BitBuffer {
     return bitBuffer;
   }
 
-  /// 从整型列表创建一个 `BitBuffer` 实例。
+  /// 从 `List<int>` 创建一个 `BitBuffer`，按指定的位数和位序进行编码。
   ///
-  /// 每个整型值将按照指定的二进制位数写入缓冲区。
+  /// ### 参数:
+  /// - `data`: 用于创建 `BitBuffer` 的整数列表。
+  /// - `binaryDigits` (可选): 每个整数使用的二进制位数，默认为 64 位。
+  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
   ///
-  /// 参数:
-  /// - `data`: 包含整数值的列表。
-  /// - `binaryDigits`: 每个整数占用的比特数，默认为 64。
+  /// ### 功能:
+  /// - 将 `List<int>` 中的每个整数按指定的位数和位序转换为 `BitBuffer`。
+  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
   ///
-  /// 返回:
-  /// - 一个新的 `BitBuffer` 实例，包含写入的整数数据。
+  /// ### 注意:
+  /// - 每个整数会根据 `binaryDigits` 参数的位数进行编码。
   ///
-  /// 示例:
+  /// ### 示例:
   /// ```dart
-  /// List<int> values = [1, -2, 3];
-  /// BitBuffer buffer = BitBuffer.formIntList(values, binaryDigits: 32);
+  /// List<int> data = [255, 127];
+  /// BitBuffer buffer = BitBuffer.formUIntList(data, binaryDigits: 8);
+  /// print(buffer.toString()); // 输出对应的二进制表示
   /// ```
   factory BitBuffer.formIntList(
     List<int> data, {
