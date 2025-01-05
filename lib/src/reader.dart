@@ -12,7 +12,7 @@ class BitBufferReader {
   /// 构造函数，初始化 `BitBufferReader` 并与指定的 `BitBuffer` 关联。
   BitBufferReader(this._buffer);
 
-  int get remainingSize => _buffer.size - _position;
+  int get remainingSize => _buffer.bitCount - _position;
 
   /// 跳过指定数量的比特，更新当前读取位置。
   ///

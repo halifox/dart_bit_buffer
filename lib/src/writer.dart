@@ -54,8 +54,8 @@ class BitBufferWriter {
   /// ```
   void seekTo(int position) {
     _position = position;
-    if (_position > _buffer.size) {
-      _buffer.allocate(_position - _buffer.size); // 扩展缓冲区以适应新的位置。
+    if (_position > _buffer.bitCount) {
+      _buffer.allocate(_position - _buffer.bitCount); // 扩展缓冲区以适应新的位置。
     }
   }
 
@@ -79,7 +79,7 @@ class BitBufferWriter {
   /// writer.allocateIfNeeded(10); // 确保缓冲区至少有 10 个比特的空间。
   /// ```
   void allocateIfNeeded(int bits) {
-    if (_position + bits > _buffer.size) {
+    if (_position + bits > _buffer.bitCount) {
       _buffer.allocate(bits);
     }
   }

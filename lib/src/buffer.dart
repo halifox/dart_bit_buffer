@@ -5,19 +5,19 @@ import 'package:bit_buffer/bit_buffer.dart';
 
 class BitBuffer {
   /// 内部字段，存储“位”的整数列表，用于模拟比特缓冲区。
-  List<int> _words = [];
+  List<int> _storage = [];
 
   /// 已经使用的比特数，表示缓冲区当前使用了多少位。
-  int _size = 0;
+  int _bitCount = 0;
 
   /// 获取当前缓冲区已使用的比特数。
-  int get size => _size;
+  int get bitCount => _bitCount;
 
   /// 每个存储单元的位数，通过地址位数来定义，表示一个存储单元的大小。
-  final int ADDRESS_BITS_PER_WORD = 6;
+  final int BITS_PER_STORAGE_UNIT = 6;
 
   /// 每个存储单元的比特数，等于 2 的 `ADDRESS_BITS_PER_WORD` 次方。
-  late final int BITS_PER_WORD = 1 << ADDRESS_BITS_PER_WORD;
+  late final int BITS_PER_WORD = 1 << BITS_PER_STORAGE_UNIT;
 
   /// 位索引掩码，用于快速计算某个位在存储单元中的位置。
   late final int BIT_INDEX_MASK = BITS_PER_WORD - 1;
@@ -158,7 +158,7 @@ class BitBuffer {
   BitBufferWriter writer() => BitBufferWriter(this);
 
   /// 返回一个用于追加比特的 `BitBufferWriter` 实例，并将写入位置设置为当前大小。
-  BitBufferWriter append() => writer()..seekTo(_size);
+  BitBufferWriter append() => writer()..seekTo(_bitCount);
 
   /// 为 `BitBuffer` 分配指定容量的比特空间。
   ///
@@ -183,21 +183,21 @@ class BitBuffer {
   /// ```
   void allocate(int capacity) {
     // 计算当前剩余的可用比特数。
-    int free = _words.length * BITS_PER_WORD - _size;
+    int free = _storage.length * BITS_PER_WORD - _bitCount;
     if (free > 0) {
-      _size += free; // 使用剩余的空闲比特。
+      _bitCount += free; // 使用剩余的空闲比特。
       capacity -= free; // 减少所需容量。
     }
 
     // 如果仍需要容量，则增加存储单元以满足需求。
     while (capacity > 0) {
-      _size += min(capacity, BITS_PER_WORD);
+      _bitCount += min(capacity, BITS_PER_WORD);
       capacity = max(capacity - BITS_PER_WORD, 0);
-      _words.add(0); // 增加新的存储单元。
+      _storage.add(0); // 增加新的存储单元。
     }
 
     // 更新大小，防止负容量的意外情况。
-    _size += capacity;
+    _bitCount += capacity;
   }
 
   /// 移除超出当前实际大小的多余存储单元，以优化内存使用。
@@ -220,18 +220,18 @@ class BitBuffer {
   /// print(buffer._words.length); // 如果多余单元被移除，可能输出: 2
   /// ```
   void trim() {
-    int free = _words.length * BITS_PER_WORD - _size;
+    int free = _storage.length * BITS_PER_WORD - _bitCount;
     // 移除超出当前大小的存储单元。
     while (free > BITS_PER_WORD) {
-      _words.removeLast();
-      free = _words.length * BITS_PER_WORD - _size;
+      _storage.removeLast();
+      free = _storage.length * BITS_PER_WORD - _bitCount;
     }
   }
 
   /// 将整个缓冲区的比特表示为字符串形式。
   @override
   String toString() {
-    return toSectionString(0, _size);
+    return toSectionString(0, _bitCount);
   }
 
   /// 返回指定范围内比特的字符串表示形式。
@@ -260,7 +260,7 @@ class BitBuffer {
   /// print(buffer.toSectionString(0, 16)); // 输出: "1010000000000000"
   /// ```
   String toSectionString(int start, int length) {
-    int end = min(start + length, _size);
+    int end = min(start + length, _bitCount);
     StringBuffer stringBuffer = StringBuffer();
     for (int position = start; position < end; position++) {
       stringBuffer.write(getBit(position)); // 获取每个位并追加到字符串缓冲区。
@@ -294,14 +294,14 @@ class BitBuffer {
   /// ```
   int getBit(int position) {
     // 检查位置是否在有效范围内。
-    if (position < 0 || position >= _size) {
-      throw RangeError('位置 $position 超出范围，当前缓冲区大小为 $_size');
+    if (position < 0 || position >= _bitCount) {
+      throw RangeError('位置 $position 超出范围，当前缓冲区大小为 $_bitCount');
     }
     // 计算该比特所属的存储单元和在单元内的位置。
-    int wordIndex = position >> ADDRESS_BITS_PER_WORD;
+    int wordIndex = position >> BITS_PER_STORAGE_UNIT;
     int bitIndex = position & BIT_INDEX_MASK;
     // 提取目标比特值。
-    return (_words[wordIndex] >> bitIndex) & 0x00000001;
+    return (_storage[wordIndex] >> bitIndex) & 0x00000001;
   }
 
   /// 设置 `BitBuffer` 中指定位置的比特值。
@@ -330,17 +330,17 @@ class BitBuffer {
   /// ```
   void setBit(int position, int bit) {
     // 检查位置是否在有效范围内。
-    if (position < 0 || position >= _size) {
-      throw RangeError('位置 $position 超出范围，当前缓冲区大小为 $_size');
+    if (position < 0 || position >= _bitCount) {
+      throw RangeError('位置 $position 超出范围，当前缓冲区大小为 $_bitCount');
     }
     // 计算该比特所属的存储单元和在单元内的位置。
-    int wordIndex = position >> ADDRESS_BITS_PER_WORD;
+    int wordIndex = position >> BITS_PER_STORAGE_UNIT;
     int bitIndex = position & BIT_INDEX_MASK;
     // 根据值（0 或 1）更新目标比特。
     if (bit == 0) {
-      _words[wordIndex] &= ~(1 << bitIndex); // 清除目标比特。
+      _storage[wordIndex] &= ~(1 << bitIndex); // 清除目标比特。
     } else {
-      _words[wordIndex] |= (1 << bitIndex); // 设置目标比特。
+      _storage[wordIndex] |= (1 << bitIndex); // 设置目标比特。
     }
   }
 
@@ -375,7 +375,7 @@ class BitBuffer {
     if (isNegative != 0) {
       // 如果是负数，转换为补码表示的有符号整数。
       int mask = (1 << (binaryDigits - 1)) - 1; // 获取有效位的掩码。
-      number = -1 * (~(number - 1) & mask); // 还原负数值。
+      number = -(~(number - 1) & mask); // 还原负数值。
     }
 
     return number;
@@ -444,7 +444,7 @@ class BitBuffer {
     if (isNegative != BigInt.zero) {
       // 如果是负数，转换为补码表示的有符号整数。
       BigInt mask = (BigInt.one << (binaryDigits - 1)) - BigInt.one; // 获取有效位的掩码。
-      number = BigInt.from(-1) * (~(number - BigInt.one) & mask); // 还原负数值。
+      number = -(~(number - BigInt.one) & mask); // 还原负数值。
     }
 
     return number;
