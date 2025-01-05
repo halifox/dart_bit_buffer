@@ -279,9 +279,9 @@ class BitBufferWriter {
     int binaryDigits = 8,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    allocateIfNeeded(binaryDigits); // 确保有足够空间写入指定位数的整数。
+    allocateIfNeeded(value.length * binaryDigits); // 确保有足够空间写入指定位数的整数。
     _buffer.putIntList(_position, value, binaryDigits: binaryDigits, order: order);
-    _position += binaryDigits; // 更新写入位置。
+    _position += value.length * binaryDigits; // 更新写入位置。
   }
 
   void putStringByUtf8(
@@ -289,8 +289,8 @@ class BitBufferWriter {
     int binaryDigits = 8,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    allocateIfNeeded(binaryDigits); // 确保有足够空间写入指定位数的整数。
+    allocateIfNeeded(value.length * binaryDigits); // 确保有足够空间写入指定位数的整数。
     _buffer.putStringByUtf8(_position, value, binaryDigits: binaryDigits, order: order);
-    _position += binaryDigits; // 更新写入位置。
+    _position += value.length * binaryDigits; // 更新写入位置。
   }
 }
