@@ -205,4 +205,14 @@ class BitBufferWriter {
     _buffer.putUnsignedInt(_position, value, binaryDigits: binaryDigits, order: order);
     _position += binaryDigits; // 更新写入位置。
   }
+
+  void putUnsignedBigInt(
+    BigInt value, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    allocateIfNeeded(binaryDigits); // 确保有足够空间写入指定位数的整数。
+    _buffer.putUnsignedBigInt(_position, value, binaryDigits: binaryDigits, order: order);
+    _position += binaryDigits; // 更新写入位置。
+  }
 }

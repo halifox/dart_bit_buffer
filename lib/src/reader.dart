@@ -151,4 +151,13 @@ class BitBufferReader {
     _position += binaryDigits; // 更新读取位置。
     return value;
   }
+
+  BigInt getUnsignedBigInt({
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    BigInt value = _buffer.getUnsignedBigInt(_position, binaryDigits: binaryDigits, order: order);
+    _position += binaryDigits; // 更新读取位置。
+    return value;
+  }
 }

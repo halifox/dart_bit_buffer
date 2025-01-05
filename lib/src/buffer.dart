@@ -387,4 +387,49 @@ class BitBuffer {
       setBit(position, bit);
     }
   }
+
+  BigInt getUnsignedBigInt(
+    int offset, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    BigInt value = BigInt.zero;
+
+    // 根据指定的顺序依次读取每个位。
+    for (int i = 0; i < binaryDigits; i++) {
+      // 计算当前比特位置。
+      int position = offset + binaryDigits - 1 - i;
+      if (order == BitOrder.MSBFirst) {
+        position = offset + i;
+      }
+
+      // 将读取的比特值按权重累加到结果值中。
+      int bit = getBit(position);
+      int shiftAmount = binaryDigits - 1 - i;
+      BigInt bitValue = BigInt.from(bit) << shiftAmount;
+      value |= bitValue;
+    }
+    return value;
+  }
+
+  void putUnsignedBigInt(
+    int offset,
+    BigInt value, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    for (int i = 0; i < binaryDigits; i++) {
+      // 提取当前位的值。
+      BigInt bit = (value >> i) & BigInt.one;
+
+      // 根据顺序确定实际写入位置。
+      int position = offset + i;
+      if (order == BitOrder.MSBFirst) {
+        position = offset + binaryDigits - 1 - i;
+      }
+
+      // 写入比特值到指定位置。
+      setBit(position, bit.toInt());
+    }
+  }
 }
