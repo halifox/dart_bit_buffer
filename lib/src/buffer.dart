@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -656,5 +657,121 @@ class BitBuffer {
       // 写入比特值到指定位置。
       setBit(position, bit.toInt());
     }
+  }
+
+  /// 获取指定偏移位置的整数列表。
+  ///
+  /// ### 参数:
+  /// - `offset`: 起始偏移位置（以比特为单位）。
+  /// - `size`: 要获取的数据大小（以比特为单位）。
+  /// - `binaryDigits`: 每个整数的比特数，默认为 64。
+  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
+  ///
+  /// ### 返回值:
+  /// 返回一个整数列表，每个整数包含指定比特数的数据。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(128); // 分配128位缓冲区。
+  /// buffer.putInt(0, 42); // 设置一个整数。
+  /// buffer.putInt(64, 99); // 设置另一个整数。
+  /// List<int> result = buffer.getIntList(0, 128);
+  /// print(result); // 输出: [42, 99]
+  /// ```
+  List<int> getIntList(
+    int offset,
+    int size, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    List<int> data = [];
+    for (int i = 0; i < size; i += binaryDigits) {
+      int value = getInt(offset + i, binaryDigits: binaryDigits, order: order);
+      data.add(value);
+    }
+    return data;
+  }
+
+  /// 设置指定偏移位置的整数列表。
+  ///
+  /// ### 参数:
+  /// - `offset`: 起始偏移位置（以比特为单位）。
+  /// - `values`: 要设置的整数列表。
+  /// - `binaryDigits`: 每个整数的比特数，默认为 64。
+  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(128); // 分配128位缓冲区。
+  /// buffer.putIntList(0, [42, 99]); // 设置一个整数列表。
+  /// print(buffer.getIntList(0, 128)); // 输出: [42, 99]
+  /// ```
+  void putIntList(
+    int offset,
+    List<int> values, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    int i = 0;
+    for (int value in values) {
+      putInt(offset + i, value, binaryDigits: binaryDigits, order: order);
+      i += binaryDigits;
+    }
+  }
+
+  /// 获取指定偏移位置的 UTF-8 编码字符串。
+  ///
+  /// ### 参数:
+  /// - `offset`: 起始偏移位置（以比特为单位）。
+  /// - `size`: 要获取的字节数。
+  /// - `binaryDigits`: 每个整数的比特数，默认为 64。
+  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
+  ///
+  /// ### 返回值:
+  /// 返回解码后的 UTF-8 字符串。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(128); // 分配128位缓冲区。
+  /// buffer.putStringByUtf8(0, 'Hello, World!'); // 设置一个UTF-8字符串。
+  /// String result = buffer.getStringByUtf8(0, 128);
+  /// print(result); // 输出: Hello, World!
+  /// ```
+  String getStringByUtf8(
+    int offset,
+    int size, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    List<int> utf8Bytes = getIntList(offset, size, binaryDigits: binaryDigits, order: order);
+    return utf8.decode(utf8Bytes);
+  }
+
+  /// 设置指定偏移位置的 UTF-8 编码字符串。
+  ///
+  /// ### 参数:
+  /// - `offset`: 起始偏移位置（以比特为单位）。
+  /// - `value`: 要设置的字符串。
+  /// - `binaryDigits`: 每个整数的比特数，默认为 64。
+  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// buffer.allocate(128); // 分配128位缓冲区。
+  /// buffer.putStringByUtf8(0, 'Hello, World!'); // 设置一个UTF-8字符串。
+  /// print(buffer.getStringByUtf8(0, 128)); // 输出: Hello, World!
+  /// ```
+  void putStringByUtf8(
+    int offset,
+    String value, {
+    int binaryDigits = 64,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    List<int> utf8Bytes = utf8.encode(value);
+    putIntList(offset, utf8Bytes);
   }
 }
