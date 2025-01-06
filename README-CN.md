@@ -262,6 +262,14 @@ void main() {
 - `putUnsignedBigInt(BigInt value, {int binaryDigits = 128, BitOrder order})`：向缓冲区写入一个无符号 BigInt 值。
     - `binaryDigits`：指定要写入的无符号 BigInt 的二进制位数，默认为 128 位。
     - `order`：比特序（Bit Order），描述单个字节内比特的排列顺序，`BitOrder.MSBFirst` 表示高位比特在前，`BitOrder.LSBFirst` 表示低位比特在前，默认为 `MSBFirst`。
+- `putIntList(List<int> value, {int binaryDigits = 8, BitOrder order = BitOrder.MSBFirst})`: 写入一个整数列表到缓冲区。
+  - `value`: 要写入的整数列表。
+  - `binaryDigits`: 每个整数的二进制位数，默认为 8 位。
+  - `order`: 位顺序，`BitOrder.MSBFirst` 表示最高有效位优先，`BitOrder.LSBFirst` 表示最低有效位优先，默认为 `MSBFirst`。
+- `putStringByUtf8(String value, {int binaryDigits = 8, BitOrder order = BitOrder.MSBFirst})`: 写入一个 UTF-8 编码的字符串到缓冲区。
+  - `value`: 要写入的字符串。
+  - `binaryDigits`: 每个字符的二进制位数，默认为 8 位。
+  - `order`: 位顺序，`BitOrder.MSBFirst` 表示最高有效位优先，`BitOrder.LSBFirst` 表示最低有效位优先，默认为 `MSBFirst`。
 
 ### BitBufferReader
 
@@ -283,6 +291,16 @@ void main() {
 - `getUnsignedBigInt({int binaryDigits = 128, BitOrder order})`：从缓冲区读取一个无符号 BigInt。
     - `binaryDigits`：指定要读取的无符号 BigInt 的二进制位数，默认为 128 位。
     - `order`：比特序（Bit Order），描述单个字节内比特的排列顺序，`BitOrder.MSBFirst` 表示高位比特在前，`BitOrder.LSBFirst` 表示低位比特在前，默认为 `MSBFirst`。
+- `getIntList(int size, {int binaryDigits = 8, BitOrder order = BitOrder.MSBFirst})`: 从缓冲区读取一个整数列表。
+  - `size`: 列表中整数的数量。
+  - `binaryDigits`: 每个整数的二进制位数，默认为 8 位。
+  - `order`: 位顺序，`BitOrder.MSBFirst` 表示最高有效位优先，`BitOrder.LSBFirst` 表示最低有效位优先，默认为 `MSBFirst`。
+  - 返回值：整数列表。
+- `getStringByUtf8(int size, {int binaryDigits = 8, BitOrder order = BitOrder.MSBFirst})`: 从缓冲区读取一个 UTF-8 编码的字符串。
+  - `size`: 字符串的长度。
+  - `binaryDigits`: 每个字符的二进制位数，默认为 8 位。
+  - `order`: 位顺序，`BitOrder.MSBFirst` 表示最高有效位优先，`BitOrder.LSBFirst` 表示最低有效位优先，默认为 `MSBFirst`。
+  - 返回值：UTF-8 编码的字符串。
 
 ---
 

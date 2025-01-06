@@ -252,9 +252,7 @@ Used to write data into a `BitBuffer`.
 
 - `putBool(bool value)`: Write a boolean value (true = 1, false = 0).
 - `putBit(int value)`: Write a single bit into the buffer.
-- `putInt(int value, {int binaryDigits = 64, Bit
-
-Order order})`: Write a signed integer into the buffer.
+- `putInt(int value, {int binaryDigits = 64, BitOrder order})`: Write a signed integer into the buffer.
     - `binaryDigits`: The number of binary digits for the integer, default is 64 bits.
     - `order`: The bit order, `BitOrder.MSBFirst` means most significant bit first, `BitOrder.LSBFirst` means least significant bit first, default is `MSBFirst`.
 - `putBigInt(BigInt value, {int binaryDigits = 128, BitOrder order})`: Write a BigInt value into the buffer.
@@ -265,6 +263,14 @@ Order order})`: Write a signed integer into the buffer.
   - `order`: The bit order, `BitOrder.MSBFirst` means most significant bit first, `BitOrder.LSBFirst` means least significant bit first, default is `MSBFirst`.
 - `putUnsignedBigInt(BigInt value, {int binaryDigits = 128, BitOrder order})`: Write an unsigned BigInt value into the buffer.
   - `binaryDigits`: The number of binary digits for the unsigned BigInt, default is 128 bits.
+  - `order`: The bit order, `BitOrder.MSBFirst` means most significant bit first, `BitOrder.LSBFirst` means least significant bit first, default is `MSBFirst`.
+- `putIntList(List<int> value, {int binaryDigits = 8, BitOrder order = BitOrder.MSBFirst})`: Write a list of integers into the buffer.
+  - `value`: The list of integers to write.
+  - `binaryDigits`: The number of binary digits for each integer, default is 8 bits.
+  - `order`: The bit order, `BitOrder.MSBFirst` means most significant bit first, `BitOrder.LSBFirst` means least significant bit first, default is `MSBFirst`.
+- `putStringByUtf8(String value, {int binaryDigits = 8, BitOrder order = BitOrder.MSBFirst})`: Write a UTF-8 encoded string into the buffer.
+  - `value`: The string to write.
+  - `binaryDigits`: The number of binary digits for each character, default is 8 bits.
   - `order`: The bit order, `BitOrder.MSBFirst` means most significant bit first, `BitOrder.LSBFirst` means least significant bit first, default is `MSBFirst`.
 
 ### BitBufferReader
@@ -287,7 +293,16 @@ Used to read data from a `BitBuffer`.
 - `getUnsignedBigInt({int binaryDigits = 128, BitOrder order})`: Reads an unsigned BigInt from the buffer.
   - `binaryDigits`: The number of binary digits for the unsigned BigInt, default is 128 bits.
   - `order`: The bit order, `BitOrder.MSBFirst` means most significant bit first, `BitOrder.LSBFirst` means least significant bit first, default is `MSBFirst`.
-
+- `getIntList(int size, {int binaryDigits = 8, BitOrder order = BitOrder.MSBFirst})`: Read a list of integers from the buffer.
+  - `size`: The number of integers in the list.
+  - `binaryDigits`: The number of binary digits for each integer, default is 8 bits.
+  - `order`: The bit order, `BitOrder.MSBFirst` means most significant bit first, `BitOrder.LSBFirst` means least significant bit first, default is `MSBFirst`.
+  - Return value: The list of integers.
+- `getStringByUtf8(int size, {int binaryDigits = 8, BitOrder order = BitOrder.MSBFirst})`: Read a UTF-8 encoded string from the buffer.
+  - `size`: The length of the string.
+  - `binaryDigits`: The number of binary digits for each character, default is 8 bits.
+  - `order`: The bit order, `BitOrder.MSBFirst` means most significant bit first, `BitOrder.LSBFirst` means least significant bit first, default is `MSBFirst`.
+  - Return value: The UTF-8 encoded string.
 ---
 
 ## 🤝 Contributing
