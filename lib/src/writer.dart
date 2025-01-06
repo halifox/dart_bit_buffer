@@ -274,6 +274,29 @@ class BitBufferWriter {
     _position += binaryDigits; // 更新写入位置。
   }
 
+  /// 写入一个整数列表到 `BitBuffer` 中，按照指定的位数和位序进行编码。
+  ///
+  /// ### 参数:
+  /// - `value`: 要写入的整数列表。
+  /// - `binaryDigits` (可选): 使用的二进制位数，默认值为 8 位。
+  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
+  ///
+  /// ### 功能:
+  /// - 将整数列表按位写入缓冲区。
+  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
+  ///
+  /// ### 注意:
+  /// - 如果缓冲区剩余空间不足，方法会自动扩展缓冲区。
+  /// - 如果 `binaryDigits` 大于实际整数的位数，整数高位将补零。
+  /// - 调用此方法后，写入位置 `_position` 会自动更新。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// BitBufferWriter writer = buffer.writer();
+  /// writer.putIntList([1, 2, 3], binaryDigits: 8); // 写入整数列表
+  /// print(buffer.toString()); // 输出对应的二进制表示
+  /// ```
   void putIntList(
     List<int> value, {
     int binaryDigits = 8,
@@ -284,6 +307,29 @@ class BitBufferWriter {
     _position += value.length * binaryDigits; // 更新写入位置。
   }
 
+  /// 写入一个字符串（UTF-8 编码）到 `BitBuffer` 中，按照指定的位数和位序进行编码。
+  ///
+  /// ### 参数:
+  /// - `value`: 要写入的字符串。
+  /// - `binaryDigits` (可选): 使用的二进制位数，默认值为 8 位。
+  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
+  ///
+  /// ### 功能:
+  /// - 将字符串转换为 UTF-8 编码，并按位写入缓冲区。
+  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
+  ///
+  /// ### 注意:
+  /// - 如果缓冲区剩余空间不足，方法会自动扩展缓冲区。
+  /// - 如果 `binaryDigits` 大于实际字符的位数，字符高位将补零。
+  /// - 调用此方法后，写入位置 `_position` 会自动更新。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// BitBufferWriter writer = buffer.writer();
+  /// writer.putStringByUtf8("Hello", binaryDigits: 8); // 写入 UTF-8 编码字符串
+  /// print(buffer.toString()); // 输出对应的二进制表示
+  /// ```
   void putStringByUtf8(
     String value, {
     int binaryDigits = 8,

@@ -214,6 +214,28 @@ class BitBufferReader {
     return value;
   }
 
+  /// 从 `BitBuffer` 中读取指定数量的整数列表，按照指定的位数和位序进行解码。
+  ///
+  /// ### 参数:
+  /// - `size`: 要读取的整数数量。
+  /// - `binaryDigits` (可选): 每个整数的二进制位数，默认值为 8 位。
+  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
+  ///
+  /// ### 功能:
+  /// - 按位从缓冲区读取整数列表。
+  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
+  ///
+  /// ### 注意:
+  /// - 调用此方法后，读取位置 `_position` 会自动更新。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// BitBufferWriter writer = buffer.writer();
+  /// writer.putIntList([1, 2, 3], binaryDigits: 8);
+  /// List<int> values = writer.getIntList(3, binaryDigits: 8);
+  /// print(values); // 输出: [1, 2, 3]
+  /// ```
   List<int> getIntList(
     int size, {
     int binaryDigits = 8,
@@ -224,6 +246,28 @@ class BitBufferReader {
     return value;
   }
 
+  /// 从 `BitBuffer` 中读取指定数量的 UTF-8 编码字符串，按照指定的位数和位序进行解码。
+  ///
+  /// ### 参数:
+  /// - `size`: 要读取的字符数量。
+  /// - `binaryDigits` (可选): 每个字符的二进制位数，默认值为 8 位。
+  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
+  ///
+  /// ### 功能:
+  /// - 按位从缓冲区读取 UTF-8 编码的字符串。
+  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
+  ///
+  /// ### 注意:
+  /// - 调用此方法后，读取位置 `_position` 会自动更新。
+  ///
+  /// ### 示例:
+  /// ```dart
+  /// BitBuffer buffer = BitBuffer();
+  /// BitBufferWriter writer = buffer.writer();
+  /// writer.putStringByUtf8("Hello", binaryDigits: 8);
+  /// String value = writer.getStringByUtf8(5, binaryDigits: 8);
+  /// print(value); // 输出: "Hello"
+  /// ```
   String getStringByUtf8(
     int size, {
     int binaryDigits = 8,
