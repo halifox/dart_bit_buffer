@@ -4,774 +4,390 @@ import 'dart:typed_data';
 
 import 'package:bit_buffer/bit_buffer.dart';
 
+/// 比特操作缓冲区
 class BitBuffer {
-  /// 内部字段，存储“位”的整数列表，用于模拟比特缓冲区。
-  List<int> _storage = [];
+  /// 内部存储单元列表，每个元素为一个存储单元
+  final List<int> _words = [];
 
-  /// 已经使用的比特数，表示缓冲区当前使用了多少位。
-  int _bitCount = 0;
+  /// 已使用比特数
+  int _bitLength = 0;
 
-  /// 获取当前缓冲区已使用的比特数。
-  int get bitCount => _bitCount;
+  /// 获取已使用比特数
+  int get bitLength => _bitLength;
 
-  /// 每个存储单元的位数，通过地址位数来定义，表示一个存储单元的大小。
-  final int BITS_PER_STORAGE_UNIT = 6;
+  /// 地址位数，用于计算存储单元大小
+  final int _addressBits = 6;
 
-  /// 每个存储单元的比特数，等于 2 的 `ADDRESS_BITS_PER_WORD` 次方。
-  late final int BITS_PER_WORD = 1 << BITS_PER_STORAGE_UNIT;
+  /// 每个存储单元包含的比特数，等于 2^_addressBits
+  late final int _wordSize = 1 << _addressBits;
 
-  /// 位索引掩码，用于快速计算某个位在存储单元中的位置。
-  late final int BIT_INDEX_MASK = BITS_PER_WORD - 1;
+  /// 存储单元内比特索引掩码
+  late final int _bitIndexMask = _wordSize - 1;
 
-  /// 默认构造函数，初始化 BitBuffer。
   BitBuffer();
 
-  /// 从 `Uint8List` 创建一个 `BitBuffer`，按指定的位序进行解码。
-  ///
-  /// ### 参数:
-  /// - `data`: 用于创建 `BitBuffer` 的 `Uint8List` 数据。
-  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
-  ///
-  /// ### 功能:
-  /// - 将 `Uint8List` 中的每个字节（8 位）按位读取，并转化为 `BitBuffer`。
-  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
-  ///
-  /// ### 注意:
-  /// - 每个字节的 8 位将被按指定的位序顺序添加到 `BitBuffer` 中。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// Uint8List data = Uint8List.fromList([255, 127]);
-  /// BitBuffer buffer = BitBuffer.formUInt8List(data);
-  /// print(buffer.toString()); // 输出对应的二进制表示
-  /// ```
-  factory BitBuffer.formUInt8List(
+  /// 从 Uint8List 构造 BitBuffer
+  factory BitBuffer.fromUint8List(
     Uint8List data, {
     BitOrder order = BitOrder.MSBFirst,
-  }) {
-    return BitBuffer.formUIntList(data, binaryDigits: 8, order: order);
-  }
+  }) =>
+      BitBuffer.fromUintList(data, binaryDigits: 8, order: order);
 
-  /// 将 `BitBuffer` 转换为一个 `Uint8List`，按指定的位序进行编码。
-  ///
-  /// ### 参数:
-  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
-  ///
-  /// ### 功能:
-  /// - 按位读取 `BitBuffer` 中的无符号整数，将其转换为 `Uint8List`。
-  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
-  ///
-  /// ### 注意:
-  /// - 转换过程中会按 8 位（一个字节）对缓冲区进行读取，直到全部数据被处理完。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// BitBufferWriter writer = buffer.writer();
-  /// writer.putUnsignedInt(255, binaryDigits: 8); // 写入 255
-  /// writer.putUnsignedInt(127, binaryDigits: 8); // 写入 127
-  /// Uint8List uint8List = buffer.toUInt8List();
-  /// print(uint8List); // 输出: [255, 127]
-  /// ```
-  Uint8List toUInt8List({
-    BitOrder order = BitOrder.MSBFirst,
-  }) {
-    List<int> data = [];
-    BitBufferReader reader = this.reader();
-    while (reader.remainingSize > 0) {
-      int value = reader.getUnsignedInt(binaryDigits: 8, order: order);
-      data.add(value);
+  /// 转换为 Uint8List
+  Uint8List toUint8List({BitOrder order = BitOrder.MSBFirst}) {
+    final List<int> byteList = [];
+    final BitBufferReader reader = getReader();
+    while (reader.remaining > 0) {
+      final int byteValue = reader.readUint(binaryDigits: 8, order: order);
+      byteList.add(byteValue);
     }
-    return Uint8List.fromList(data);
+    return Uint8List.fromList(byteList);
   }
 
-  /// 从 `List<int>` 创建一个 `BitBuffer`，按指定的位数和位序进行编码，要求 `data` 中的每个整数都是无符号类型。
-  ///
-  /// ### 参数:
-  /// - `data`: 用于创建 `BitBuffer` 的无符号整数列表。
-  /// - `binaryDigits` (可选): 每个整数使用的二进制位数，默认为 64 位。
-  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
-  ///
-  /// ### 功能:
-  /// - 将 `List<int>` 中的每个无符号整数按指定的位数和位序转换为 `BitBuffer`。
-  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
-  ///
-  /// ### 注意:
-  /// - 每个整数会根据 `binaryDigits` 参数的位数进行编码。
-  /// - `data` 中的每个整数必须是无符号的。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// List<int> data = [255, 127]; // 无符号整数列表
-  /// BitBuffer buffer = BitBuffer.formUIntList(data, binaryDigits: 8);
-  /// print(buffer.toString()); // 输出对应的二进制表示
-  /// ```
-  factory BitBuffer.formUIntList(
+  /// 从无符号整数列表构造 BitBuffer
+  factory BitBuffer.fromUintList(
     List<int> data, {
     int binaryDigits = 64,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    BitBuffer bitBuffer = BitBuffer();
-    BitBufferWriter writer = bitBuffer.writer();
-    for (int value in data) {
-      writer.putUnsignedInt(value, binaryDigits: binaryDigits, order: order);
+    final BitBuffer buffer = BitBuffer();
+    final BitBufferWriter writer = buffer.getWriter();
+    for (final int unsignedValue in data) {
+      writer.writeUint(unsignedValue, binaryDigits: binaryDigits, order: order);
     }
-    return bitBuffer;
+    return buffer;
   }
 
-  List<int> toUIntList({
+  /// 转换为无符号整数列表
+  List<int> toUintList({
     int binaryDigits = 64,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    List<int> data = [];
-    BitBufferReader reader = this.reader();
-    while (reader.remainingSize > 0) {
-      int value = reader.getUnsignedInt(binaryDigits: binaryDigits, order: order);
-      data.add(value);
+    final List<int> unsignedList = [];
+    final BitBufferReader reader = getReader();
+    while (reader.remaining > 0) {
+      final int unsignedValue = reader.readUint(binaryDigits: binaryDigits, order: order);
+      unsignedList.add(unsignedValue);
     }
-    return data;
+    return unsignedList;
   }
 
-  /// 从 `List<int>` 创建一个 `BitBuffer`，按指定的位数和位序进行编码。
-  ///
-  /// ### 参数:
-  /// - `data`: 用于创建 `BitBuffer` 的整数列表。
-  /// - `binaryDigits` (可选): 每个整数使用的二进制位数，默认为 64 位。
-  /// - `order` (可选): 位序顺序，默认为 `BitOrder.MSBFirst`（高位优先）。
-  ///
-  /// ### 功能:
-  /// - 将 `List<int>` 中的每个整数按指定的位数和位序转换为 `BitBuffer`。
-  /// - 支持高位优先（MSBFirst）或低位优先（LSBFirst）的位序。
-  ///
-  /// ### 注意:
-  /// - 每个整数会根据 `binaryDigits` 参数的位数进行编码。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// List<int> data = [255, 127];
-  /// BitBuffer buffer = BitBuffer.formUIntList(data, binaryDigits: 8);
-  /// print(buffer.toString()); // 输出对应的二进制表示
-  /// ```
-  factory BitBuffer.formIntList(
+  /// 从有符号整数列表构造 BitBuffer
+  factory BitBuffer.fromIntList(
     List<int> data, {
     int binaryDigits = 64,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    BitBuffer bitBuffer = BitBuffer();
-    BitBufferWriter writer = bitBuffer.writer();
-    for (int value in data) {
-      writer.putInt(value, binaryDigits: binaryDigits, order: order);
+    final BitBuffer buffer = BitBuffer();
+    final BitBufferWriter writer = buffer.getWriter();
+    for (final int signedValue in data) {
+      writer.writeInt(signedValue, binaryDigits: binaryDigits, order: order);
     }
-    return bitBuffer;
+    return buffer;
   }
 
+  /// 转换为有符号整数列表
   List<int> toIntList({
     int binaryDigits = 64,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    List<int> data = [];
-    BitBufferReader reader = this.reader();
-    while (reader.remainingSize > 0) {
-      int value = reader.getInt(binaryDigits: binaryDigits, order: order);
-      data.add(value);
+    final List<int> intList = [];
+    final BitBufferReader reader = getReader();
+    while (reader.remaining > 0) {
+      final int intValue = reader.readInt(binaryDigits: binaryDigits, order: order);
+      intList.add(intValue);
     }
-    return data;
+    return intList;
   }
 
-  /// 返回一个用于读取的 `BitBufferReader` 实例。
-  BitBufferReader reader() => BitBufferReader(this);
+  /// 获取 BitBuffer 读取器
+  BitBufferReader getReader() => BitBufferReader(this);
 
-  /// 返回一个用于写入的 `BitBufferWriter` 实例。
-  BitBufferWriter writer() => BitBufferWriter(this);
+  /// 获取 BitBuffer 写入器
+  BitBufferWriter getWriter() => BitBufferWriter(this);
 
-  /// 返回一个用于追加比特的 `BitBufferWriter` 实例，并将写入位置设置为当前大小。
-  BitBufferWriter append() => writer()..seekTo(_bitCount);
+  /// 获取追加写入器，其写入位置设为当前末尾
+  BitBufferWriter append() => getWriter()..seekTo(_bitLength);
 
-  /// 为 `BitBuffer` 分配指定容量的比特空间。
-  ///
-  /// ### 参数:
-  /// - `capacity`: 需要分配的比特数量。
-  ///
-  /// ### 功能:
-  /// - 使用当前存储单元中剩余的空闲比特。
-  /// - 根据需要增加新的存储单元以满足分配需求。
-  ///
-  /// ### 注意:
-  /// - 如果当前存储单元中有空闲比特，会优先使用这些空闲比特。
-  /// - 该方法会自动扩展缓冲区的存储单元，不会缩减已有的容量。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(50); // 分配50个位的空间。
-  /// print(buffer.size); // 输出: 50
-  /// buffer.allocate(20); // 再分配20个位的空间。
-  /// print(buffer.size); // 输出: 70
-  /// ```
+  /// 分配指定比特容量，必要时扩展存储单元
   void allocate(int capacity) {
-    // 计算当前剩余的可用比特数。
-    int free = _storage.length * BITS_PER_WORD - _bitCount;
-    if (free > 0) {
-      _bitCount += free; // 使用剩余的空闲比特。
-      capacity -= free; // 减少所需容量。
+    // 当前存储单元剩余可用比特数
+    int totalAllocatedBits = _words.length * _wordSize;
+    int freeBits = totalAllocatedBits - _bitLength;
+    if (freeBits > 0) {
+      // 使用剩余空闲比特
+      _bitLength += freeBits;
+      capacity -= freeBits;
     }
-
-    // 如果仍需要容量，则增加存储单元以满足需求。
     while (capacity > 0) {
-      _bitCount += min(capacity, BITS_PER_WORD);
-      capacity = max(capacity - BITS_PER_WORD, 0);
-      _storage.add(0); // 增加新的存储单元。
+      _bitLength += min(capacity, _wordSize);
+      capacity = max(capacity - _wordSize, 0);
+      _words.add(0);
     }
-
-    // 更新大小，防止负容量的意外情况。
-    _bitCount += capacity;
+    _bitLength += capacity;
   }
 
-  /// 移除超出当前实际大小的多余存储单元，以优化内存使用。
-  ///
-  /// ### 功能:
-  /// - 根据当前使用的比特大小 `_size`，移除未被使用的存储单元。
-  /// - 如果存储单元包含多余的空间但仍在使用范围内，不会移除。
-  ///
-  /// ### 注意:
-  /// - 该方法不会改变已分配的比特大小 `_size`，仅调整存储单元数量。
-  /// - 只移除完全未使用的存储单元，部分使用的存储单元将保留。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(100); // 分配100个位的空间。
-  /// print(buffer.size); // 输出: 100
-  /// print(buffer._words.length); // 假设输出: 2
-  /// buffer.trim(); // 移除多余的存储单元。
-  /// print(buffer._words.length); // 如果多余单元被移除，可能输出: 2
-  /// ```
+  /// 移除多余的存储单元以节约内存
   void trim() {
-    int free = _storage.length * BITS_PER_WORD - _bitCount;
-    // 移除超出当前大小的存储单元。
-    while (free > BITS_PER_WORD) {
-      _storage.removeLast();
-      free = _storage.length * BITS_PER_WORD - _bitCount;
+    int totalAllocatedBits = _words.length * _wordSize;
+    int freeBits = totalAllocatedBits - _bitLength;
+    // 只移除完全未使用的存储单元
+    while (freeBits >= _wordSize) {
+      _words.removeLast();
+      totalAllocatedBits = _words.length * _wordSize;
+      freeBits = totalAllocatedBits - _bitLength;
     }
   }
 
-  /// 将整个缓冲区的比特表示为字符串形式。
   @override
-  String toString() {
-    return toSectionString(0, _bitCount);
-  }
+  String toString() => toSectionString(0, _bitLength);
 
-  /// 返回指定范围内比特的字符串表示形式。
-  ///
-  /// ### 参数:
-  /// - `start`: 起始位置（以比特为单位）。
-  ///   - 必须在 `[0, size - 1]` 范围内。
-  /// - `length`: 要获取的比特长度。
-  ///   - 如果指定范围超出缓冲区大小，则返回实际可用的部分。
-  ///
-  /// ### 返回值:
-  /// - `String`: 指定范围内的比特值的字符串表示形式（由 `0` 和 `1` 组成）。
-  ///
-  /// ### 注意:
-  /// - 该方法不会修改缓冲区内容，仅用于获取部分比特的视图。
-  /// - 超出缓冲区范围的部分将被自动截断。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(16); // 分配16位缓冲区。
-  /// buffer.setBit(0, 1);
-  /// buffer.setBit(1, 0);
-  /// buffer.setBit(2, 1);
-  /// print(buffer.toSectionString(0, 3)); // 输出: "101"
-  /// print(buffer.toSectionString(0, 16)); // 输出: "1010000000000000"
-  /// ```
+  /// 获取指定范围内的比特字符串表示
   String toSectionString(int start, int length) {
-    int end = min(start + length, _bitCount);
-    StringBuffer stringBuffer = StringBuffer();
-    for (int position = start; position < end; position++) {
-      stringBuffer.write(getBit(position)); // 获取每个位并追加到字符串缓冲区。
+    final int end = min(start + length, _bitLength);
+    final StringBuffer buffer = StringBuffer();
+    for (int currentPos = start; currentPos < end; currentPos++) {
+      final int bitValue = readBit(currentPos);
+      buffer.write(bitValue);
     }
-    return stringBuffer.toString();
+    return buffer.toString();
   }
 
-  /// 从 `BitBuffer` 中获取指定位置的比特值。
-  ///
-  /// ### 参数:
-  /// - `position`: 要获取的比特索引。
-  ///   - 必须在 `[0, size - 1]` 范围内。
-  ///
-  /// ### 返回值:
-  /// - `int`: 指定位置的比特值，取值为 0 或 1。
-  ///
-  /// ### 异常:
-  /// - `RangeError`: 如果 `position` 小于 0 或大于等于缓冲区的大小，将抛出范围错误。
-  ///
-  /// ### 注意:
-  /// - `position` 用于计算存储单元（word）和单元内的比特索引。
-  /// - 使用位操作高效地提取比特值。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(32); // 分配32位缓冲区。
-  /// buffer.setBit(5, 1); // 将第5个位设置为1。
-  /// print(buffer.getBit(5)); // 输出: 1
-  /// print(buffer.getBit(0)); // 输出: 0
-  /// ```
-  int getBit(int position) {
-    // 检查位置是否在有效范围内。
-    if (position < 0 || position >= _bitCount) {
-      throw RangeError('位置 $position 超出范围，当前缓冲区大小为 $_bitCount');
+  /// 获取指定位置的比特值（0或1）
+  int readBit(int position) {
+    if (position < 0 || position >= _bitLength) {
+      throw RangeError('position $position 超出范围，当前长度为 $_bitLength');
     }
-    // 计算该比特所属的存储单元和在单元内的位置。
-    int wordIndex = position >> BITS_PER_STORAGE_UNIT;
-    int bitIndex = position & BIT_INDEX_MASK;
-    // 提取目标比特值。
-    return (_storage[wordIndex] >> bitIndex) & 0x00000001;
+    // 计算所属存储单元索引
+    final int wordIndex = position >> _addressBits;
+    // 计算在存储单元内的比特索引
+    final int bitIndex = position & _bitIndexMask;
+    // 获取存储单元数据
+    final int wordData = _words[wordIndex];
+    // 提取目标比特
+    final int shiftedData = wordData >> bitIndex;
+    final int bitValue = shiftedData & 1;
+    return bitValue;
   }
 
-  /// 设置 `BitBuffer` 中指定位置的比特值。
-  ///
-  /// ### 参数:
-  /// - `position`: 要设置的比特索引。
-  ///   - 必须在 `[0, size - 1]` 范围内。
-  /// - `bit`: 要设置的比特值。
-  ///   - 只能为 0 或 1。
-  ///
-  /// ### 异常:
-  /// - `RangeError`: 如果 `position` 小于 0 或大于等于缓冲区的大小，将抛出范围错误。
-  ///
-  /// ### 注意:
-  /// - `position` 用于计算存储单元（word）和单元内的比特索引。
-  /// - 根据 `bit` 的值，清除或设置目标比特。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(32); // 分配32位缓冲区。
-  /// buffer.setBit(5, 1); // 将第5个位设置为1。
-  /// print(buffer.getBit(5)); // 输出: 1
-  /// buffer.setBit(5, 0); // 将第5个位清除为0。
-  /// print(buffer.getBit(5)); // 输出: 0
-  /// ```
-  void setBit(int position, int bit) {
-    // 检查位置是否在有效范围内。
-    if (position < 0 || position >= _bitCount) {
-      throw RangeError('位置 $position 超出范围，当前缓冲区大小为 $_bitCount');
+  /// 设置指定位置的比特值
+  void writeBit(int position, int bit) {
+    if (position < 0 || position >= _bitLength) {
+      throw RangeError('position $position 超出范围，当前长度为 $_bitLength');
     }
-    // 计算该比特所属的存储单元和在单元内的位置。
-    int wordIndex = position >> BITS_PER_STORAGE_UNIT;
-    int bitIndex = position & BIT_INDEX_MASK;
-    // 根据值（0 或 1）更新目标比特。
+    final int wordIndex = position >> _addressBits;
+    final int bitIndex = position & _bitIndexMask;
+    int currentWord = _words[wordIndex];
     if (bit == 0) {
-      _storage[wordIndex] &= ~(1 << bitIndex); // 清除目标比特。
+      // 清除指定位
+      final int clearMask = ~(1 << bitIndex);
+      currentWord = currentWord & clearMask;
     } else {
-      _storage[wordIndex] |= (1 << bitIndex); // 设置目标比特。
+      // 设置指定位
+      final int setMask = 1 << bitIndex;
+      currentWord = currentWord | setMask;
     }
+    _words[wordIndex] = currentWord;
   }
 
-  /// 获取指定偏移位置的有符号整数值。
-  ///
-  /// ### 参数:
-  /// - `offset`: 起始偏移位置（以比特为单位）。
-  /// - `binaryDigits`: 要读取的比特位数，默认为 64。
-  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
-  ///
-  /// ### 返回值:
-  /// - `int`: 读取到的有符号整数值。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(64); // 分配64位缓冲区。
-  /// buffer.putInt(0, -12345); // 设置一个负数值。
-  /// print(buffer.getInt(0)); // 输出: -12345
-  /// ```
-  int getInt(
+  /// 读取指定偏移位置的有符号整数
+  int readInt(
     int offset, {
     int binaryDigits = 64,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    // 先读取无符号整数值。
-    int number = getUnsignedInt(offset, binaryDigits: binaryDigits, order: order);
-
-    // 检查符号位，判断是否为负数。
-    int isNegative = (number >> (binaryDigits - 1)) & 1;
-
-    if (isNegative != 0) {
-      // 如果是负数，转换为补码表示的有符号整数。
-      int mask = (1 << binaryDigits) - 1; // 获取有效位的掩码。
-      number = -(~(number - 1) & mask); // 还原负数值。
+    // 先读取无符号整数
+    final int unsignedValue = readUint(offset, binaryDigits: binaryDigits, order: order);
+    // 检查符号位
+    final int signBit = (unsignedValue >> (binaryDigits - 1)) & 1;
+    if (signBit == 0) {
+      return unsignedValue;
     }
-
-    return number;
+    // 若为负数，根据补码还原
+    final int fullMask = (1 << binaryDigits) - 1;
+    final int inverted = ~(unsignedValue - 1) & fullMask;
+    final int signedValue = -inverted;
+    return signedValue;
   }
 
-  /// 设置指定偏移位置的有符号整数值。
-  ///
-  /// ### 参数:
-  /// - `offset`: 起始偏移位置（以比特为单位）。
-  /// - `value`: 要设置的有符号整数值。
-  /// - `binaryDigits`: 要设置的比特位数，默认为 64。
-  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(64); // 分配64位缓冲区。
-  /// buffer.putInt(0, -12345); // 设置一个负数值。
-  /// print(buffer.getInt(0)); // 输出: -12345
-  /// ```
-  void putInt(
+  /// 写入指定偏移位置的有符号整数
+  void writeInt(
     int offset,
     int value, {
     int binaryDigits = 64,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    if (value.isNegative) {
-      // 处理负数值，转换为补码形式。
-      int mask = (1 << binaryDigits) - 1;
-      value = ~(-value); // 取反。
-      value += 1; // 加 1 形成补码。
-      value &= mask; // 保留指定位数。
+    int writeValue = value;
+    if (writeValue.isNegative) {
+      final int fullMask = (1 << binaryDigits) - 1;
+      final int absValue = -writeValue;
+      final int complement = (~absValue + 1) & fullMask;
+      writeValue = complement;
     }
-    putUnsignedInt(offset, value, binaryDigits: binaryDigits, order: order);
+    writeUint(offset, writeValue, binaryDigits: binaryDigits, order: order);
   }
 
-  /// 获取指定偏移位置的无符号大整数值。
-  ///
-  /// ### 参数:
-  /// - `offset`: 起始偏移位置（以比特为单位）。
-  /// - `binaryDigits`: 要读取的比特位数，默认为 128。
-  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
-  ///
-  /// ### 返回值:
-  /// - `BigInt`: 读取到的无符号大整数值。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(128); // 分配128位缓冲区。
-  /// buffer.putBigInt(0, BigInt.from(1234567890123456789)); // 设置一个大整数。
-  /// print(buffer.getBigInt(0)); // 输出: 1234567890123456789
-  /// ```
-  BigInt getBigInt(
-    int offset, {
-    int binaryDigits = 128,
-    BitOrder order = BitOrder.MSBFirst,
-  }) {
-    // 先读取无符号整数值。
-    BigInt number = getUnsignedBigInt(offset, binaryDigits: binaryDigits, order: order);
-
-    // 检查符号位，判断是否为负数。
-    int shiftAmount = binaryDigits - 1;
-    BigInt isNegative = number >> shiftAmount;
-
-    if (isNegative != BigInt.zero) {
-      // 如果是负数，转换为补码表示的有符号整数。
-      BigInt mask = (BigInt.one << binaryDigits) - BigInt.one; // 获取有效位的掩码。
-      number = -(~(number - BigInt.one) & mask); // 还原负数值。
-    }
-
-    return number;
-  }
-
-  /// 设置指定偏移位置的无符号大整数值。
-  ///
-  /// ### 参数:
-  /// - `offset`: 起始偏移位置（以比特为单位）。
-  /// - `value`: 要设置的无符号大整数值。
-  /// - `binaryDigits`: 要设置的比特位数，默认为 128。
-  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(128); // 分配128位缓冲区。
-  /// buffer.putBigInt(0, BigInt.from(1234567890123456789)); // 设置一个大整数。
-  /// print(buffer.getBigInt(0)); // 输出: 1234567890123456789
-  /// ```
-  void putBigInt(
-    int offset,
-    BigInt value, {
-    int binaryDigits = 128,
-    BitOrder order = BitOrder.MSBFirst,
-  }) {
-    if (value.isNegative) {
-      // 处理负数值，转换为补码形式。
-      BigInt mask = (BigInt.one << binaryDigits) - BigInt.one;
-      value = ~(-value); // 取反。
-      value += BigInt.one; // 加 1 形成补码。
-      value &= mask; // 保留指定位数。
-    }
-    putUnsignedBigInt(offset, value, binaryDigits: binaryDigits, order: order);
-  }
-
-  /// 获取指定偏移位置的无符号整数值。
-  ///
-  /// ### 参数:
-  /// - `offset`: 起始偏移位置（以比特为单位）。
-  /// - `binaryDigits`: 要读取的比特位数，默认为 64。
-  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
-  ///
-  /// ### 返回值:
-  /// - `int`: 读取到的无符号整数值。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(64); // 分配64位缓冲区。
-  /// buffer.putUnsignedInt(0, 12345); // 设置一个无符号整数值。
-  /// print(buffer.getUnsignedInt(0)); // 输出: 12345
-  /// ```
-  int getUnsignedInt(
+  /// 读取指定偏移位置的无符号整数
+  int readUint(
     int offset, {
     int binaryDigits = 64,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    int value = 0;
-
-    // 根据指定的顺序依次读取每个位。
+    int result = 0;
     for (int i = 0; i < binaryDigits; i++) {
-      // 计算当前比特位置。
-      int position = offset + binaryDigits - 1 - i;
+      int actualPosition;
       if (order == BitOrder.MSBFirst) {
-        position = offset + i;
+        actualPosition = offset + i;
+      } else {
+        actualPosition = offset + binaryDigits - 1 - i;
       }
-
-      // 将读取的比特值按权重累加到结果值中。
-      value |= (getBit(position) << (binaryDigits - 1 - i));
+      final int currentBit = readBit(actualPosition);
+      final int shiftAmount = binaryDigits - 1 - i;
+      result |= currentBit << shiftAmount;
     }
-    return value;
+    return result;
   }
 
-  /// 设置指定偏移位置的无符号整数值。
-  ///
-  /// ### 参数:
-  /// - `offset`: 起始偏移位置（以比特为单位）。
-  /// - `value`: 要设置的无符号整数值。
-  /// - `binaryDigits`: 要设置的比特位数，默认为 64。
-  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(64); // 分配64位缓冲区。
-  /// buffer.putUnsignedInt(0, 12345); // 设置一个无符号整数值。
-  /// print(buffer.getUnsignedInt(0)); // 输出: 12345
-  /// ```
-  void putUnsignedInt(
+  /// 写入指定偏移位置的无符号整数
+  void writeUint(
     int offset,
     int value, {
     int binaryDigits = 64,
     BitOrder order = BitOrder.MSBFirst,
   }) {
     for (int i = 0; i < binaryDigits; i++) {
-      // 提取当前位的值。
-      int bit = (value >> i) & 1;
-
-      // 根据顺序确定实际写入位置。
-      int position = offset + i;
+      final int extractedBit = (value >> i) & 1;
+      int targetPosition;
       if (order == BitOrder.MSBFirst) {
-        position = offset + binaryDigits - 1 - i;
+        targetPosition = offset + binaryDigits - 1 - i;
+      } else {
+        targetPosition = offset + i;
       }
-
-      // 写入比特值到指定位置。
-      setBit(position, bit);
+      writeBit(targetPosition, extractedBit);
     }
   }
 
-  /// 获取指定偏移位置的无符号大整数值。
-  ///
-  /// ### 参数:
-  /// - `offset`: 起始偏移位置（以比特为单位）。
-  /// - `binaryDigits`: 要读取的比特位数，默认为 128。
-  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
-  ///
-  /// ### 返回值:
-  /// - `BigInt`: 读取到的无符号大整数值。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(128); // 分配128位缓冲区。
-  /// buffer.putUnsignedBigInt(0, BigInt.from(1234567890123456789)); // 设置一个无符号大整数。
-  /// print(buffer.getUnsignedBigInt(0)); // 输出: 1234567890123456789
-  /// ```
-  BigInt getUnsignedBigInt(
+  /// 读取指定偏移位置的有符号大整数
+  BigInt readBigInt(
     int offset, {
     int binaryDigits = 128,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    BigInt value = BigInt.zero;
-
-    // 根据指定的顺序依次读取每个位。
-    for (int i = 0; i < binaryDigits; i++) {
-      // 计算当前比特位置。
-      int position = offset + binaryDigits - 1 - i;
-      if (order == BitOrder.MSBFirst) {
-        position = offset + i;
-      }
-
-      // 将读取的比特值按权重累加到结果值中。
-      int bit = getBit(position);
-      int shiftAmount = binaryDigits - 1 - i;
-      BigInt bitValue = BigInt.from(bit) << shiftAmount;
-      value |= bitValue;
+    final BigInt unsignedBigInt = readUBigInt(offset, binaryDigits: binaryDigits, order: order);
+    final BigInt signIndicator = unsignedBigInt >> (binaryDigits - 1);
+    if (signIndicator == BigInt.zero) {
+      return unsignedBigInt;
     }
-    return value;
+    final BigInt fullMask = (BigInt.one << binaryDigits) - BigInt.one;
+    final BigInt inverted = (~(unsignedBigInt - BigInt.one)) & fullMask;
+    return -inverted;
   }
 
-  /// 设置指定偏移位置的无符号大整数值。
-  ///
-  /// ### 参数:
-  /// - `offset`: 起始偏移位置（以比特为单位）。
-  /// - `value`: 要设置的无符号大整数值。
-  /// - `binaryDigits`: 要设置的比特位数，默认为 128。
-  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(128); // 分配128位缓冲区。
-  /// buffer.putUnsignedBigInt(0, BigInt.from(1234567890123456789)); // 设置一个无符号大整数。
-  /// print(buffer.getUnsignedBigInt(0)); // 输出: 1234567890123456789
-  /// ```
-  void putUnsignedBigInt(
+  /// 写入指定偏移位置的有符号大整数
+  void writeBigInt(
+    int offset,
+    BigInt value, {
+    int binaryDigits = 128,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    BigInt writeValue = value;
+    if (writeValue.isNegative) {
+      final BigInt fullMask = (BigInt.one << binaryDigits) - BigInt.one;
+      final BigInt absValue = -writeValue;
+      final BigInt complement = ((~absValue) + BigInt.one) & fullMask;
+      writeValue = complement;
+    }
+    writeUBigInt(offset, writeValue, binaryDigits: binaryDigits, order: order);
+  }
+
+  /// 读取指定偏移位置的无符号大整数
+  BigInt readUBigInt(
+    int offset, {
+    int binaryDigits = 128,
+    BitOrder order = BitOrder.MSBFirst,
+  }) {
+    BigInt result = BigInt.zero;
+    for (int i = 0; i < binaryDigits; i++) {
+      int actualPosition;
+      if (order == BitOrder.MSBFirst) {
+        actualPosition = offset + i;
+      } else {
+        actualPosition = offset + binaryDigits - 1 - i;
+      }
+      final int currentBit = readBit(actualPosition);
+      final int shiftAmount = binaryDigits - 1 - i;
+      result |= BigInt.from(currentBit) << shiftAmount;
+    }
+    return result;
+  }
+
+  /// 写入指定偏移位置的无符号大整数
+  void writeUBigInt(
     int offset,
     BigInt value, {
     int binaryDigits = 128,
     BitOrder order = BitOrder.MSBFirst,
   }) {
     for (int i = 0; i < binaryDigits; i++) {
-      // 提取当前位的值。
-      BigInt bit = (value >> i) & BigInt.one;
-
-      // 根据顺序确定实际写入位置。
-      int position = offset + i;
+      final BigInt extractedBit = (value >> i) & BigInt.one;
+      int targetPosition;
       if (order == BitOrder.MSBFirst) {
-        position = offset + binaryDigits - 1 - i;
+        targetPosition = offset + binaryDigits - 1 - i;
+      } else {
+        targetPosition = offset + i;
       }
-
-      // 写入比特值到指定位置。
-      setBit(position, bit.toInt());
+      writeBit(targetPosition, extractedBit.toInt());
     }
   }
 
-  /// 获取指定偏移位置的整数列表。
-  ///
-  /// ### 参数:
-  /// - `offset`: 起始偏移位置（以比特为单位）。
-  /// - `size`: 要获取的数据大小（以比特为单位）。
-  /// - `binaryDigits`: 每个整数的比特数，默认为 8。
-  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
-  ///
-  /// ### 返回值:
-  /// 返回一个整数列表，每个整数包含指定比特数的数据。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(128); // 分配128位缓冲区。
-  /// buffer.putInt(0, 42); // 设置一个整数。
-  /// buffer.putInt(64, 99); // 设置另一个整数。
-  /// List<int> result = buffer.getIntList(0, 128);
-  /// print(result); // 输出: [42, 99]
-  /// ```
-  List<int> getIntList(
+  /// 读取从指定偏移开始的整数列表，每个整数占 binaryDigits 位
+  List<int> readIntList(
     int offset,
     int size, {
     int binaryDigits = 8,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    List<int> data = [];
-    for (int i = 0; i < size; i += binaryDigits) {
-      int value = getInt(offset + i, binaryDigits: binaryDigits, order: order);
-      data.add(value);
+    final List<int> intList = [];
+    for (int currentOffset = 0; currentOffset < size; currentOffset += binaryDigits) {
+      final int intValue = readInt(offset + currentOffset, binaryDigits: binaryDigits, order: order);
+      intList.add(intValue);
     }
-    return data;
+    return intList;
   }
 
-  /// 设置指定偏移位置的整数列表。
-  ///
-  /// ### 参数:
-  /// - `offset`: 起始偏移位置（以比特为单位）。
-  /// - `values`: 要设置的整数列表。
-  /// - `binaryDigits`: 每个整数的比特数，默认为 8。
-  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(128); // 分配128位缓冲区。
-  /// buffer.putIntList(0, [42, 99]); // 设置一个整数列表。
-  /// print(buffer.getIntList(0, 128)); // 输出: [42, 99]
-  /// ```
-  void putIntList(
+  /// 写入整数列表，每个整数占 binaryDigits 位
+  void writeIntList(
     int offset,
     List<int> values, {
     int binaryDigits = 8,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    int i = 0;
-    for (int value in values) {
-      putInt(offset + i, value, binaryDigits: binaryDigits, order: order);
-      i += binaryDigits;
+    int currentOffset = offset;
+    for (final int intValue in values) {
+      writeInt(currentOffset, intValue, binaryDigits: binaryDigits, order: order);
+      currentOffset += binaryDigits;
     }
   }
 
-  /// 获取指定偏移位置的 UTF-8 编码字符串。
-  ///
-  /// ### 参数:
-  /// - `offset`: 起始偏移位置（以比特为单位）。
-  /// - `size`: 要获取的字节数。
-  /// - `binaryDigits`: 每个整数的比特数，默认为 8。
-  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
-  ///
-  /// ### 返回值:
-  /// 返回解码后的 UTF-8 字符串。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(128); // 分配128位缓冲区。
-  /// buffer.putStringByUtf8(0, 'Hello, World!'); // 设置一个UTF-8字符串。
-  /// String result = buffer.getStringByUtf8(0, 128);
-  /// print(result); // 输出: Hello, World!
-  /// ```
-  String getStringByUtf8(
+  /// 读取指定偏移位置的 UTF-8 编码字符串（size 字节）
+  String readUtf8String(
     int offset,
     int size, {
     int binaryDigits = 8,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    List<int> utf8Bytes = getIntList(offset, size, binaryDigits: binaryDigits, order: order);
-    return utf8.decode(utf8Bytes);
+    final List<int> byteList = readIntList(offset, size, binaryDigits: binaryDigits, order: order);
+    return utf8.decode(byteList);
   }
 
-  /// 设置指定偏移位置的 UTF-8 编码字符串。
-  ///
-  /// ### 参数:
-  /// - `offset`: 起始偏移位置（以比特为单位）。
-  /// - `value`: 要设置的字符串。
-  /// - `binaryDigits`: 每个整数的比特数，默认为 8。
-  /// - `order`: 比特顺序，默认为 `BitOrder.MSBFirst`。
-  ///
-  /// ### 示例:
-  /// ```dart
-  /// BitBuffer buffer = BitBuffer();
-  /// buffer.allocate(128); // 分配128位缓冲区。
-  /// buffer.putStringByUtf8(0, 'Hello, World!'); // 设置一个UTF-8字符串。
-  /// print(buffer.getStringByUtf8(0, 128)); // 输出: Hello, World!
-  /// ```
-  void putStringByUtf8(
+  /// 写入 UTF-8 编码字符串
+  void writeUtf8String(
     int offset,
     String value, {
     int binaryDigits = 8,
     BitOrder order = BitOrder.MSBFirst,
   }) {
-    List<int> utf8Bytes = utf8.encode(value);
-    putIntList(offset, utf8Bytes, binaryDigits: binaryDigits, order: order);
+    final List<int> utf8Bytes = utf8.encode(value);
+    writeIntList(offset, utf8Bytes, binaryDigits: binaryDigits, order: order);
   }
 }
