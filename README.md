@@ -95,6 +95,10 @@ writer.writeUint(5, binaryDigits: 8, order: BitOrder.LSBFirst); // Bits: 1010000
 - `writeBool()`, `writeInt()`, `writeBigInt()`, `writeUtf8String()`: Sequential writes.
 - `allocateIfNeeded()`: Ensure buffer capacity before writing.
 
+> ⚠️ The `size` parameter in the `readIntList`/`readUtf8String` method represents the total number of bits to read, not the
+> number of integers in the list. The returned list will contain `size ~/ binaryDigits` integers, and if `size` is not a
+> multiple of `binaryDigits`, the remaining bits at the end will be ignored.
+
 ## Notes
 
 - **Performance**: Prefer reusing `BitBuffer` instances for high-frequency operations.
