@@ -390,4 +390,9 @@ class BitBuffer {
     final List<int> utf8Bytes = utf8.encode(value);
     writeIntList(offset, utf8Bytes, binaryDigits: binaryDigits, order: order);
   }
+
+  void clear() {
+    _words.clear();
+    _bitLength = 0;
+  }
 }
