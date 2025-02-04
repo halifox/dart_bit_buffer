@@ -1,6 +1,6 @@
 name: bit_buffer
 description: "A Dart library for efficient bit-level data manipulation, providing flexible reading and writing of various data types with configurable bit ordering."
-version: 2.0.0
+version: 2.0.1
 homepage: https://github.com/halifox/dart_bit_buffer
 
 environment:

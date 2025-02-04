@@ -18,7 +18,7 @@ dependencies:
   bit_buffer:
     git:
       url: https://github.com/halifox/dart_bit_buffer
-      ref: 2.0.0
+      ref: 2.0.1
 ```
 
 ## Usage
